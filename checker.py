@@ -1,5 +1,7 @@
 # py-doctor/checker.py
 
+"""Ferramentas de diagnóstico e verificação de dependências."""
+
 import os
 import subprocess
 import time
@@ -19,6 +21,14 @@ console = Console()
 
 
 def diagnosticar_projeto(caminho_projeto):
+    """Menu interativo de diagnóstico para um projeto.
+
+    Args:
+        caminho_projeto (str): Caminho do projeto a ser analisado.
+
+    Returns:
+        None
+    """
     while True:
         console.rule(f"[bold cyan]🔬 Diagnóstico: {caminho_projeto}")
         console.print("[1]: Verificar pacotes instalados com requirements.txt")
@@ -53,6 +63,15 @@ def diagnosticar_projeto(caminho_projeto):
 
 
 def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
+    """Exibe o último log de diagnóstico ou limpeza.
+
+    Args:
+        caminho_projeto (str): Diretório do projeto.
+        tipo (str): Prefixo do arquivo de log a buscar.
+
+    Returns:
+        None
+    """
     safe_name = caminho_projeto.replace(os.sep, "_")
     padrao = f"logs/{tipo}_log_{safe_name}_*.txt"
     arquivos = sorted(glob(padrao), reverse=True)
@@ -80,6 +99,14 @@ def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
 # def diagnostico_basico(...)
 # def verificar_consistencia_requirements(...)
 def restaurar_backup_requirements(projeto_path):
+    """Restaura o ``requirements.txt`` a partir de um backup.
+
+    Args:
+        projeto_path (str): Caminho do projeto alvo.
+
+    Returns:
+        None
+    """
     req_path = os.path.join(projeto_path, "requirements.txt")
     backup = req_path + ".bak"
     if not os.path.exists(backup):
@@ -105,6 +132,14 @@ def restaurar_backup_requirements(projeto_path):
 
 
 def diagnostico_basico(caminho_projeto):
+    """Verifica se as dependências declaradas estão instaladas.
+
+    Args:
+        caminho_projeto (str): Caminho do projeto.
+
+    Returns:
+        None
+    """
     req_path = os.path.join(caminho_projeto, "requirements.txt")
     modo_teste = esta_em_modo_teste()
     log = f"Diagnóstico do projeto: {caminho_projeto}\n"
@@ -185,6 +220,15 @@ def diagnostico_basico(caminho_projeto):
 
 
 def verificar_consistencia_requirements(projeto_path, requeridos):
+    """Compara pacotes usados no código com o ``requirements.txt``.
+
+    Args:
+        projeto_path (str): Diretório do projeto.
+        requeridos (list[str]): Lista de dependências declaradas.
+
+    Returns:
+        None
+    """
     console.rule("[bold magenta]📊 Verificando consistência do requirements.txt")
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
@@ -228,6 +272,14 @@ def verificar_consistencia_requirements(projeto_path, requeridos):
 
 
 def atualizar_requirements(projeto_path):
+    """Atualiza ``requirements.txt`` adicionando e removendo pacotes.
+
+    Args:
+        projeto_path (str): Caminho do projeto.
+
+    Returns:
+        None
+    """
     req_path = os.path.join(projeto_path, "requirements.txt")
     modo_teste = esta_em_modo_teste()
     if not os.path.exists(req_path):
