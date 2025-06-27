@@ -85,7 +85,21 @@ def carregar_configuracao():
     parser = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
         try:
-            parser.read(CONFIG_FILE)
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                conteudo = f.read()
+
+            # Detecta se o arquivo possui cabeçalho de seção
+            linhas = [
+                linha.strip()
+                for linha in conteudo.splitlines()
+                if linha.strip() and not linha.strip().startswith(("#", ";"))
+            ]
+            tem_header = linhas and linhas[0].startswith("[")
+
+            if not tem_header:
+                conteudo = "[DEFAULT]\n" + conteudo
+
+            parser.read_string(conteudo)
             _CONFIG_CACHE = dict(parser["DEFAULT"]) if "DEFAULT" in parser else {}
         except Exception as e:  # pragma: no cover - safe guard for parse issues
             console.print(f"[red]Erro ao ler {CONFIG_FILE}: {e}[/]")
