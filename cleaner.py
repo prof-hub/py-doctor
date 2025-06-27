@@ -1,5 +1,7 @@
 # py-doctor/cleaner.py
 
+"""Rotinas de limpeza de arquivos e gestão de logs."""
+
 import os
 import time
 import shutil
@@ -12,6 +14,15 @@ console = Console()
 
 
 def limpar_pycache(projeto_path):
+    """Remove pastas ``__pycache__`` e arquivos temporários.
+
+    Args:
+        projeto_path (str): Diretório do projeto que será limpo.
+
+    Returns:
+        None
+    """
+
     console.rule(f"[bold red]🧹 Limpando: {projeto_path}")
     modo_teste = esta_em_modo_teste()
     removidos = []
@@ -94,8 +105,16 @@ def limpar_pycache(projeto_path):
     logar(texto_log, projeto_path, tipo="limpeza")
 
 
+
 def arquivar_logs_antigos(dias):
-    """Move arquivos .log antigos para a pasta ``logs_arquivados``."""
+    """Move arquivos ``.log`` antigos para a pasta ``logs_arquivados``.
+
+    Args:
+        dias (int): Idade mínima dos logs (em dias) para serem arquivados.
+
+    Returns:
+        None
+    """
 
     destino = os.path.join(LOG_DIR, "logs_arquivados")
     os.makedirs(destino, exist_ok=True)

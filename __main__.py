@@ -1,5 +1,11 @@
 # py-doctor/__main__.py
 
+"""Command line interface for Py-Doctor.
+
+This module exposes the interactive menus used to diagnose and clean Python
+projects. It can also be executed directly as ``python -m py_doctor``.
+"""
+
 import os
 import sys
 import datetime
@@ -28,11 +34,29 @@ log_file = open(log_path, "w", encoding="utf-8")
 
 
 def registrar_log(texto):
+    """Grava uma mensagem no arquivo de log principal.
+
+    Args:
+        texto (str): Conteúdo a ser registrado.
+
+    Returns:
+        None
+    """
+
     log_file.write(f"{datetime.datetime.now().isoformat()} - {texto}\n")
     log_file.flush()
 
 
 def listar_projetos(workspace):
+    """Varre o diretório informado em busca de subprojetos Python.
+
+    Args:
+        workspace (str): Caminho base onde os projetos residem.
+
+    Returns:
+        list[str]: Lista de caminhos para projetos encontrados.
+    """
+
     pasta_python = os.path.join(workspace, "python")
     console.print(f"\n[cyan]🔍 Procurando projetos em:[/] {pasta_python}\n")
     registrar_log(f"Verificando subpastas diretas em: {pasta_python}")
@@ -58,6 +82,15 @@ def listar_projetos(workspace):
 
 
 def exibir_tabela_projetos(projetos):
+    """Exibe em formato de tabela os projetos detectados.
+
+    Args:
+        projetos (Iterable[str]): Caminhos para projetos a serem mostrados.
+
+    Returns:
+        None
+    """
+
     table = Table(title="Projetos Python Detectados", show_lines=True)
     table.add_column("ID", style="bold green", justify="right")
     table.add_column("Caminho", style="cyan")
@@ -69,6 +102,17 @@ def exibir_tabela_projetos(projetos):
 
 
 def menu_acao(projeto):
+    """Menu de ações para um projeto específico.
+
+    Apresenta opções de diagnóstico e limpeza para ``projeto``.
+
+    Args:
+        projeto (str): Caminho do projeto em questão.
+
+    Returns:
+        None
+    """
+
     while True:
         console.print(Panel(f"🎯 [bold]Ações para:[/] [yellow]{projeto}[/]"))
         console.print("[bold green][1][/]: Diagnosticar ambiente")
@@ -87,6 +131,12 @@ def menu_acao(projeto):
 
 
 def menu():
+    """Menu principal da aplicação.
+
+    Returns:
+        None
+    """
+
     console.print(
         "\n[bold magenta]===[/] [bold white]🛠 Py-Doctor: Diagnóstico de Projetos Python[/] [bold magenta]===\n[/]"
     )
