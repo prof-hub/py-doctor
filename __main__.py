@@ -20,14 +20,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from py_doctor.checker import diagnosticar_projeto
 from py_doctor.cleaner import limpar_pycache
-from py_doctor.utils import obter_workspace
-from py_doctor import filesystem as fs
+
 
 console = Console()
 
 # Início do log de execução
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
+garantir_logs()
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 log_path = os.path.join(LOG_DIR, f"exec_log_{timestamp}.txt")
 log_file = open(log_path, "w", encoding="utf-8")
