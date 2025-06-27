@@ -3,10 +3,23 @@
 import os
 import datetime
 import configparser
+from functools import lru_cache
+from glob import glob
+from rich.console import Console
+
+try:  # pragma: no cover - optional dependency
+    from rich.markdown import Markdown
+except ImportError:  # pragma: no cover - optional dependency
+    Markdown = None
+
+console = Console()
 
 
 LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
+_CONFIG_CACHE = None
+
+# Cache para configuracao carregada
 _CONFIG_CACHE = None
 
 
@@ -66,6 +79,7 @@ def esta_em_modo_teste():
 
 
 def carregar_configuracao():
+    """Lê o arquivo ``.pydoctor_config`` com cache.
 
     global _CONFIG_CACHE
     if _CONFIG_CACHE is not None:
@@ -73,11 +87,6 @@ def carregar_configuracao():
 
     parser = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
-        parser.read(CONFIG_FILE, encoding="utf-8")
-        _CONFIG_CACHE = parser["DEFAULT"]
-    else:
-        _CONFIG_CACHE = {}
-    return _CONFIG_CACHE
 
 def reload_config():
     """Força a releitura do arquivo de configuração."""
@@ -95,4 +104,81 @@ def obter_workspace():
 
     config = carregar_configuracao()
     return os.path.expanduser(config.get("workspace", "~/workspace"))
+
+
+def load_requirements(projeto_path):
+    """Carrega as dependências de ``requirements.txt`` com cache.
+
+    Args:
+        projeto_path (str): Caminho do projeto.
+
+    Returns:
+        list[str]: Lista de dependências declaradas.
+    """
+
+    req_path = os.path.join(projeto_path, "requirements.txt")
+    if not os.path.exists(req_path):
+        return []
+    mtime = os.path.getmtime(req_path)
+    return _load_requirements_cached(req_path, mtime)
+
+
+@lru_cache(maxsize=None)
+def _load_requirements_cached(req_path, _mtime):
+    with open(req_path, "r", encoding="utf-8") as f:
+        return [
+            linha.strip()
+            for linha in f
+            if linha.strip() and not linha.startswith("#")
+        ]
+
+
+def mostrar_ultimo_log(caminho_projeto=None, projeto_path=None, tipo="diagnostico"):
+    """Exibe o conteúdo do log mais recente do ``tipo`` para ``caminho_projeto``.
+
+    Args:
+        caminho_projeto (str | None): Caminho do projeto.
+        projeto_path (str | None): Alias para ``caminho_projeto``.
+        tipo (str): Prefixo do log (``diagnostico`` ou ``limpeza``).
+
+    Returns:
+        None
+    """
+
+    path = caminho_projeto or projeto_path
+    if not path:
+        raise ValueError("caminho_projeto/projeto_path é obrigatório")
+
+    garantir_logs()
+    safe_name = path.replace(os.sep, "_")
+    padrao = os.path.join(LOG_DIR, f"{tipo}_log_{safe_name}_*.txt")
+    arquivos = sorted(glob(padrao), reverse=True)
+    if not arquivos:
+        console.print(f"[red]Nenhum log encontrado para:[/] {path}")
+        return
+
+    ultimo = arquivos[0]
+    console.rule(f"📜 Último log de {tipo}")
+    with open(ultimo, "r", encoding="utf-8") as f:
+        conteudo = f.read()
+        if Markdown:
+            console.print(Markdown(conteudo))
+        else:
+            console.print(
+                "[yellow]⚠️ Módulo markdown_it não disponível — exibindo texto puro:"
+            )
+            console.print(conteudo)
+
+
+__all__ = [
+    "garantir_logs",
+    "timestamp",
+    "logar",
+    "esta_em_modo_teste",
+    "carregar_configuracao",
+    "reload_config",
+    "obter_workspace",
+    "load_requirements",
+    "mostrar_ultimo_log",
+]
 
