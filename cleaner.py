@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
 from py_doctor.utils import logar, esta_em_modo_teste, LOG_DIR
+from py_doctor import filesystem as fs
 
 console = Console()
 
@@ -36,7 +37,7 @@ def limpar_pycache(projeto_path):
                 removidos.append(("__pycache__", caminho))
                 if not modo_teste:
                     try:
-                        shutil.rmtree(caminho)
+                        fs.remove_path(caminho)
                     except PermissionError as e:
                         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
                         logar(
@@ -60,7 +61,7 @@ def limpar_pycache(projeto_path):
                 removidos.append((f[-4:], caminho))
                 if not modo_teste:
                     try:
-                        os.remove(caminho)
+                        fs.remove_path(caminho)
                     except PermissionError as e:
                         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
                         logar(
@@ -126,8 +127,8 @@ def mostrar_ultimo_log(projeto_path, tipo="limpeza"):
 
     ultimo = arquivos[0]
     console.rule(f"📜 Último log de {tipo}")
-    with open(ultimo, "r", encoding="utf-8") as f:
-        console.print(Markdown(f.read()))
+    conteudo = fs.read_text(ultimo, default="")
+    console.print(Markdown(conteudo))
 
 
 def arquivar_logs_antigos(dias):
