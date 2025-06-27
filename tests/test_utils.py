@@ -71,3 +71,18 @@ def test_log_filename_windows(monkeypatch, tmp_path):
     caminho = utils.logar("msg", projeto)
     assert caminho == expected_path
     assert opened["path"] == expected_path
+
+
+def test_default_config_created(monkeypatch, tmp_path):
+    cfg_path = tmp_path / ".pydoctor_config"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(utils, "CONFIG_FILE", str(cfg_path))
+    utils._CONFIG_CACHE = None
+    utils.DEFAULT_CONFIG_CREATED = False
+
+    config = utils.carregar_configuracao()
+    assert utils.DEFAULT_CONFIG_CREATED
+    assert cfg_path.exists()
+    assert config["workspace"] == str(tmp_path)
+    workspace = utils.obter_workspace()
+    assert workspace == str(tmp_path)
