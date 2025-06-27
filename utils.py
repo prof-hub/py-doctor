@@ -79,7 +79,7 @@ def esta_em_modo_teste():
 
 
 def carregar_configuracao():
-    """Lê o arquivo ``.pydoctor_config`` com cache.
+    """Lê o arquivo ``.pydoctor_config`` com cache."""
 
     global _CONFIG_CACHE
     if _CONFIG_CACHE is not None:
@@ -87,6 +87,17 @@ def carregar_configuracao():
 
     parser = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
+        try:
+            parser.read(CONFIG_FILE)
+            _CONFIG_CACHE = dict(parser["DEFAULT"]) if "DEFAULT" in parser else {}
+        except Exception as e:  # pragma: no cover - safe guard for parse issues
+            console.print(f"[red]Erro ao ler {CONFIG_FILE}: {e}[/]")
+            _CONFIG_CACHE = {}
+    else:
+        _CONFIG_CACHE = {}
+
+    return _CONFIG_CACHE
+
 
 def reload_config():
     """Força a releitura do arquivo de configuração."""
