@@ -12,8 +12,6 @@ from rich.panel import Panel
 
 import py_doctor.filesystem as fs
 from py_doctor.utils import (
-    load_requirements,
-    esta_em_modo_teste,
     logar,
     mostrar_ultimo_log,
 )
@@ -36,6 +34,8 @@ def diagnosticar_projeto(caminho_projeto):
     Returns:
         None
     """
+    requeridos = load_requirements(caminho_projeto)
+
     while True:
         console.rule(f"[bold cyan]🔬 Diagnóstico: {caminho_projeto}")
         console.print("[1]: Verificar pacotes instalados com requirements.txt")
@@ -113,6 +113,7 @@ def diagnostico_basico(caminho_projeto):
     """
     req_path = os.path.join(caminho_projeto, "requirements.txt")
     modo_teste = esta_em_modo_teste()
+    requeridos = load_requirements(caminho_projeto)
     log = f"Diagnóstico do projeto: {caminho_projeto}\n"
     inicio = time.time()
 
@@ -249,6 +250,7 @@ def atualizar_requirements(projeto_path):
     """
     req_path = os.path.join(projeto_path, "requirements.txt")
     modo_teste = esta_em_modo_teste()
+    requeridos = load_requirements(projeto_path)
     if not os.path.exists(req_path):
         console.print("[red]❌ requirements.txt não encontrado.")
         return
