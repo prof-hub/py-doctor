@@ -13,8 +13,6 @@ try:
     from rich.markdown import Markdown
 except ImportError:
     Markdown = None
-from py_doctor.utils import logar, esta_em_modo_teste
-from py_doctor import filesystem as fs
 
 console = Console()
 
@@ -34,12 +32,7 @@ def diagnosticar_projeto(caminho_projeto):
         elif escolha == "2":
             req_path = os.path.join(caminho_projeto, "requirements.txt")
             if os.path.exists(req_path):
-                conteudo = fs.read_text(req_path, default="")
-                requeridos = [
-                    linha.strip()
-                    for linha in conteudo.splitlines()
-                    if linha.strip() and not linha.startswith("#")
-                ]
+
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
                 console.print("[red]requirements.txt não encontrado.")
@@ -117,10 +110,7 @@ def diagnostico_basico(caminho_projeto):
         logar(log, caminho_projeto, tipo="diagnostico")
         return
 
-    conteudo = fs.read_text(req_path, default="")
-    requeridos = [
-        linha.strip() for linha in conteudo.splitlines() if linha.strip() and not linha.startswith("#")
-    ]
+
 
     console.print(
         f"📄 {len(requeridos)} dependência(s) declarada(s) em requirements.txt"
@@ -234,10 +224,6 @@ def atualizar_requirements(projeto_path):
         console.print("[red]❌ requirements.txt não encontrado.")
         return
 
-    conteudo = fs.read_text(req_path, default="")
-    requeridos = [
-        linha.strip() for linha in conteudo.splitlines() if linha.strip() and not linha.startswith("#")
-    ]
 
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
