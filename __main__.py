@@ -8,6 +8,10 @@ projects. It can also be executed directly as ``python -m py_doctor``.
 
 import os
 import sys
+
+# Ajuste de path para execução direta (caso rodando fora de pacotes instalados)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import datetime
 import argparse
 from rich.console import Console
@@ -17,9 +21,6 @@ from rich.table import Table
 
 import py_doctor.filesystem as fs
 from py_doctor.utils import LOG_DIR, garantir_logs, obter_workspace
-
-# Ajuste de path para execução direta (caso rodando fora de pacotes instalados)
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from py_doctor.checker import diagnosticar_projeto
 from py_doctor.cleaner import limpar_pycache
