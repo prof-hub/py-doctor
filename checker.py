@@ -11,9 +11,6 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-import py_doctor.filesystem as fs
-from py_doctor.utils import LOG_DIR, logar, esta_em_modo_teste
-
 try:
     from rich.markdown import Markdown
 except ImportError:
@@ -21,19 +18,6 @@ except ImportError:
 
 
 console = Console()
-
-
-def mostrar_ultimo_log(projeto, tipo="geral"):
-    """Exibe o conteúdo do log mais recente para ``projeto``."""
-    padrao = f"{tipo}_log_{projeto.replace('/', '_')}*"
-    arquivos = sorted(glob(os.path.join(LOG_DIR, padrao)))
-    if not arquivos:
-        console.print("[red]Nenhum log encontrado.")
-        return
-    caminho = arquivos[-1]
-    console.rule(f"📝 Último log: {caminho}")
-    texto = fs.read_text(caminho, default="")
-    console.print(texto)
 
 
 def diagnosticar_projeto(caminho_projeto):
@@ -59,7 +43,6 @@ def diagnosticar_projeto(caminho_projeto):
         elif escolha == "2":
             req_path = os.path.join(caminho_projeto, "requirements.txt")
             if os.path.exists(req_path):
-                requeridos = fs.read_text(req_path, default="").splitlines()
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
                 console.print("[red]requirements.txt não encontrado.")
@@ -132,8 +115,7 @@ def diagnostico_basico(caminho_projeto):
         log += "Requisitos não encontrados."
         logar(log, caminho_projeto, tipo="diagnostico")
         return
-
-    requeridos = fs.read_text(req_path, default="").splitlines()
+      
 
     console.print(
         f"📄 {len(requeridos)} dependência(s) declarada(s) em requirements.txt"
@@ -264,7 +246,6 @@ def atualizar_requirements(projeto_path):
         console.print("[red]❌ requirements.txt não encontrado.")
         return
 
-    requeridos = fs.read_text(req_path, default="").splitlines()
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
     for root, _, files in os.walk(projeto_path):
