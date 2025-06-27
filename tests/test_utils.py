@@ -1,6 +1,5 @@
 import builtins
 import os
-import ntpath
 import sys
 import types
 
@@ -36,23 +35,21 @@ def test_log_filename_posix(tmp_path, monkeypatch):
     utils.garantir_logs()
 
     projeto = f"dir{os.sep}proj"
-    expected = f"geral_log_{projeto.replace(os.sep, '_')}_ts.txt"
+    expected = tmp_path / f"geral_log_{projeto.replace(os.sep, '_')}_ts.txt"
     caminho = utils.logar("msg", projeto)
-    assert caminho == os.path.join(tmp_path, expected)
+    assert caminho == expected
     with open(caminho, "r", encoding="utf-8") as f:
         assert f.read() == "[INFO] msg\n"
 
 
 def test_log_filename_windows(monkeypatch, tmp_path):
-    monkeypatch.setattr(utils, "LOG_DIR", str(tmp_path))
+    monkeypatch.setattr(utils, "LOG_DIR", tmp_path)
     monkeypatch.setattr(utils.os, "sep", "\\")
-    monkeypatch.setattr(utils.os, "path", ntpath)
     monkeypatch.setattr(utils, "timestamp", lambda: "ts")
     utils.garantir_logs()
 
     projeto = "dir\\proj"
-    expected = f"geral_log_{projeto.replace('\\', '_')}_ts.txt"
-    expected_path = ntpath.join(str(tmp_path), expected)
+    expected = tmp_path / f"geral_log_{projeto.replace('\\', '_')}_ts.txt"
     opened = {}
 
     def dummy_open(path, mode="w", encoding=None):
@@ -69,5 +66,5 @@ def test_log_filename_windows(monkeypatch, tmp_path):
     monkeypatch.setattr(builtins, "open", dummy_open)
 
     caminho = utils.logar("msg", projeto)
-    assert caminho == expected_path
-    assert opened["path"] == expected_path
+    assert caminho == expected
+    assert opened["path"] == expected

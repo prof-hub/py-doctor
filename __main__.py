@@ -6,17 +6,18 @@ This module exposes the interactive menus used to diagnose and clean Python
 projects. It can also be executed directly as ``python -m py_doctor``.
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Ajuste de path para execução direta (caso rodando fora de pacotes instalados)
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import datetime
 import argparse
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
+from rich.panel import Panel
 
 import py_doctor.filesystem as fs
 from py_doctor.utils import LOG_DIR, garantir_logs, obter_workspace
@@ -36,7 +37,7 @@ def abrir_log_file():
 
     garantir_logs()
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_path = os.path.join(LOG_DIR, f"exec_log_{timestamp}.txt")
+    log_path = Path(LOG_DIR) / f"exec_log_{timestamp}.txt"
     return open(log_path, "w", encoding="utf-8")
 
 
@@ -65,11 +66,12 @@ def listar_projetos(workspace, subdir="python"):
         list[str]: Lista de caminhos para projetos encontrados.
     """
 
-    pasta_python = os.path.join(workspace, subdir)
+    workspace = Path(workspace)
+    pasta_python = workspace / subdir
     console.print(f"\n[cyan]🔍 Procurando projetos em:[/] {pasta_python}\n")
     registrar_log(f"Verificando subpastas diretas em: {pasta_python}")
 
-    if not os.path.isdir(pasta_python):
+    if not pasta_python.is_dir():
         console.print(
             f"[red]❌ Subdiretório '{subdir}/' não encontrado dentro do workspace.[/]"
         )
@@ -78,8 +80,8 @@ def listar_projetos(workspace, subdir="python"):
 
     projetos = []
     for nome in sorted(fs.list_dir(pasta_python)):
-        caminho = os.path.join(pasta_python, nome)
-        if not os.path.isdir(caminho):
+        caminho = pasta_python / nome
+        if not caminho.is_dir():
             continue
         arquivos = fs.list_dir(caminho)
         if any(f.endswith(".py") for f in arquivos) or "requirements.txt" in arquivos:
@@ -104,7 +106,7 @@ def exibir_tabela_projetos(projetos):
     table.add_column("Caminho", style="cyan")
 
     for i, caminho in enumerate(projetos, start=1):
-        table.add_row(str(i), caminho)
+        table.add_row(str(i), str(caminho))
 
     console.print(table)
 
@@ -121,6 +123,7 @@ def menu_acao(projeto):
         None
     """
 
+    projeto = Path(projeto)
     while True:
         console.print(Panel(f"🎯 [bold]Ações para:[/] [yellow]{projeto}[/]"))
         console.print("[bold green][1][/]: Diagnosticar ambiente")
@@ -153,7 +156,7 @@ def menu():
     console.print(f"[dim]ℹ️ Usando configuração de workspace: {workspace}[/]")
     registrar_log(f"Workspace carregado: {workspace}")
 
-    if not os.path.isdir(workspace):
+    if not workspace.is_dir():
         console.print(f"[red]❌ Diretório de workspace não encontrado:[/] {workspace}")
         registrar_log(f"Workspace não encontrado: {workspace}")
         return

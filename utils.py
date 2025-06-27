@@ -5,6 +5,7 @@ import datetime
 import configparser
 from functools import lru_cache
 from glob import glob
+from pathlib import Path
 from rich.console import Console
 
 try:  # pragma: no cover - optional dependency
@@ -15,8 +16,8 @@ except ImportError:  # pragma: no cover - optional dependency
 console = Console()
 
 
-LOG_DIR = "logs"
-CONFIG_FILE = ".pydoctor_config"
+LOG_DIR = Path("logs")
+CONFIG_FILE = Path(".pydoctor_config")
 _CONFIG_CACHE = None
 
 
@@ -27,7 +28,7 @@ def garantir_logs():
         None
     """
 
-    os.makedirs(LOG_DIR, exist_ok=True)
+    Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
 
 
 def timestamp():
@@ -51,17 +52,17 @@ def logar(texto, projeto, tipo="geral", nivel="INFO"):
         nivel (str, optional): Severidade da mensagem. Defaults to ``"INFO"``.
 
     Returns:
-        str: Caminho completo do arquivo de log criado.
+        Path: Caminho completo do arquivo de log criado.
     """
 
-    nome_log = f"{tipo}_log_{projeto.replace(os.sep, '_')}_{timestamp()}.txt"
-    caminho = os.path.join(LOG_DIR, nome_log)
+    nome_log = f"{tipo}_log_{str(projeto).replace(os.sep, '_')}_{timestamp()}.txt"
+    caminho = Path(LOG_DIR) / nome_log
 
     with open(caminho, "w", encoding="utf-8") as f:
         f.write(f"[{nivel}] {texto}\n")
 
     print(f"📝 Log salvo em: {caminho}")
-    return caminho
+    return Path(caminho)
 
 
 def esta_em_modo_teste():
@@ -83,9 +84,9 @@ def carregar_configuracao():
         return _CONFIG_CACHE
 
     parser = configparser.ConfigParser()
-    if os.path.exists(CONFIG_FILE):
+    if CONFIG_FILE.exists():
         try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            with CONFIG_FILE.open("r", encoding="utf-8") as f:
                 conteudo = f.read()
 
             # Detecta se o arquivo possui cabeçalho de seção
@@ -125,7 +126,7 @@ def obter_workspace():
     """
 
     config = carregar_configuracao()
-    return os.path.expanduser(config.get("workspace", "~/workspace"))
+    return Path(config.get("workspace", "~/workspace")).expanduser()
 
 
 def load_requirements(projeto_path):
@@ -138,10 +139,10 @@ def load_requirements(projeto_path):
         list[str]: Lista de dependências declaradas.
     """
 
-    req_path = os.path.join(projeto_path, "requirements.txt")
-    if not os.path.exists(req_path):
+    req_path = Path(projeto_path) / "requirements.txt"
+    if not req_path.exists():
         return []
-    mtime = os.path.getmtime(req_path)
+    mtime = req_path.stat().st_mtime
     return _load_requirements_cached(req_path, mtime)
 
 
@@ -166,11 +167,11 @@ def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
         None
     """
 
-    path = caminho_projeto
+    path = Path(caminho_projeto)
 
     garantir_logs()
-    safe_name = path.replace(os.sep, "_")
-    padrao = os.path.join(LOG_DIR, f"{tipo}_log_{safe_name}_*.txt")
+    safe_name = str(path).replace(os.sep, "_")
+    padrao = str(LOG_DIR / f"{tipo}_log_{safe_name}_*.txt")
     arquivos = sorted(glob(padrao), reverse=True)
     if not arquivos:
         console.print(f"[red]Nenhum log encontrado para:[/] {path}")

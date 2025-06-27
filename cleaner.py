@@ -6,6 +6,7 @@ import os
 import time
 import shutil
 from glob import glob
+from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
@@ -52,6 +53,7 @@ def limpar_pycache(projeto_path):
     """
 
     console.rule(f"[bold red]🧹 Limpando: {projeto_path}")
+    projeto_path = Path(projeto_path)
     modo_teste = esta_em_modo_teste()
     removidos = []
     inicio = time.time()
@@ -59,14 +61,14 @@ def limpar_pycache(projeto_path):
     for root, dirs, files in os.walk(projeto_path):
         for d in dirs:
             if d == "__pycache__":
-                caminho = os.path.join(root, d)
+                caminho = Path(root) / d
                 removidos.append(("__pycache__", caminho))
                 if not modo_teste:
                     _remover_caminho(caminho, projeto_path)
 
         for f in files:
             if f.endswith((".pyc", ".pyo", ".log")):
-                caminho = os.path.join(root, f)
+                caminho = Path(root) / f
                 removidos.append((f[-4:], caminho))
                 if not modo_teste:
                     _remover_caminho(caminho, projeto_path)
@@ -81,7 +83,7 @@ def limpar_pycache(projeto_path):
     tabela.add_column("Caminho", style="dim")
 
     for tipo, caminho in removidos:
-        tabela.add_row(tipo, caminho)
+        tabela.add_row(tipo, str(caminho))
 
     console.print(tabela)
 
@@ -110,14 +112,14 @@ def arquivar_logs_antigos(dias):
         None
     """
 
-    destino = os.path.join(LOG_DIR, "logs_arquivados")
-    os.makedirs(destino, exist_ok=True)
+    destino = Path(LOG_DIR) / "logs_arquivados"
+    destino.mkdir(parents=True, exist_ok=True)
     limite = time.time() - dias * 86400
 
-    for arquivo in glob(os.path.join(LOG_DIR, "*.txt")):
-        if os.path.getmtime(arquivo) < limite:
+    for arquivo in Path(LOG_DIR).glob("*.txt"):
+        if arquivo.stat().st_mtime < limite:
             try:
-                shutil.move(arquivo, os.path.join(destino, os.path.basename(arquivo)))
+                shutil.move(str(arquivo), str(destino / arquivo.name))
                 console.print(f"[blue]Arquivo arquivado:[/] {arquivo}")
             except Exception as e:
                 console.print(f"[red]Erro ao arquivar {arquivo}: {e}")
