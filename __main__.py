@@ -15,6 +15,9 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
+import py_doctor.filesystem as fs
+from py_doctor.utils import LOG_DIR, garantir_logs, obter_workspace
+
 # Ajuste de path para execução direta (caso rodando fora de pacotes instalados)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 

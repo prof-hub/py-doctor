@@ -26,14 +26,20 @@ conda activate pydoctor_env
 
 2. Clone ou copie o projeto Py-Doctor
 
-3. Crie um arquivo `.pydoctor_config` na raiz do repositório:
+3. Instale as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Crie um arquivo `.pydoctor_config` na raiz do repositório contendo o caminho do workspace e se deseja rodar em modo de teste:
 
 ```ini
 workspace=/caminho/para/seu/workspace
 modo_teste=true
 ```
 
-4. Execute:
+5. Execute a CLI:
 
 ```bash
 python -m py_doctor
@@ -79,12 +85,12 @@ Isso impede a instalação de pacotes e remoção de arquivos, apenas exibindo a
 ## 📋 Requisitos
 
 - Python 3.8+
-- `rich`
+- Dependências listadas em `requirements.txt`
 
 Instalação:
 
 ```bash
-pip install rich
+pip install -r requirements.txt
 ```
 
 ---

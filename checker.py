@@ -6,12 +6,10 @@ import os
 import subprocess
 import time
 import ast
+from glob import glob
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-
-from . import filesystem as fs
-from .utils import esta_em_modo_teste, logar
 
 try:
     from rich.markdown import Markdown
@@ -20,21 +18,6 @@ except ImportError:
 
 
 console = Console()
-
-
-def load_requirements(projeto_path: str) -> list[str]:
-    """Read ``requirements.txt`` from ``projeto_path``."""
-    req_file = os.path.join(projeto_path, "requirements.txt")
-    text = fs.read_text(req_file, default="")
-    if not text:
-        return []
-    deps = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        deps.append(line)
-    return deps
 
 
 def diagnosticar_projeto(caminho_projeto):
@@ -60,7 +43,6 @@ def diagnosticar_projeto(caminho_projeto):
         elif escolha == "2":
             req_path = os.path.join(caminho_projeto, "requirements.txt")
             if os.path.exists(req_path):
-                requeridos = load_requirements(caminho_projeto)
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
                 console.print("[red]requirements.txt não encontrado.")
@@ -133,8 +115,7 @@ def diagnostico_basico(caminho_projeto):
         log += "Requisitos não encontrados."
         logar(log, caminho_projeto, tipo="diagnostico")
         return
-
-    requeridos = load_requirements(caminho_projeto)
+      
 
     console.print(
         f"📄 {len(requeridos)} dependência(s) declarada(s) em requirements.txt"
@@ -265,7 +246,6 @@ def atualizar_requirements(projeto_path):
         console.print("[red]❌ requirements.txt não encontrado.")
         return
 
-    requeridos = load_requirements(projeto_path)
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
     for root, _, files in os.walk(projeto_path):
