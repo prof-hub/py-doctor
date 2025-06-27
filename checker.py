@@ -6,15 +6,12 @@ import os
 import subprocess
 import time
 import ast
-from glob import glob
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
 import py_doctor.filesystem as fs
 from py_doctor.utils import (
-    esta_em_modo_teste,
-    load_requirements,
     logar,
     mostrar_ultimo_log,
 )
