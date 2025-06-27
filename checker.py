@@ -6,10 +6,17 @@ import os
 import subprocess
 import time
 import ast
-from glob import glob
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+
+import py_doctor.filesystem as fs
+from py_doctor.utils import (
+    load_requirements,
+    esta_em_modo_teste,
+    logar,
+    mostrar_ultimo_log,
+)
 
 try:
     from rich.markdown import Markdown
