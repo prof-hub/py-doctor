@@ -4,7 +4,6 @@ import os
 import subprocess
 import time
 import ast
-from glob import glob
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -13,7 +12,7 @@ try:
     from rich.markdown import Markdown
 except ImportError:
     Markdown = None
-from py_doctor.utils import logar, esta_em_modo_teste
+from py_doctor.utils import logar, esta_em_modo_teste, mostrar_ultimo_log
 
 console = Console()
 
@@ -52,25 +51,6 @@ def diagnosticar_projeto(caminho_projeto):
             break
 
 
-def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
-    safe_name = caminho_projeto.replace(os.sep, "_")
-    padrao = f"logs/{tipo}_log_{safe_name}_*.txt"
-    arquivos = sorted(glob(padrao), reverse=True)
-    if not arquivos:
-        console.print(f"[red]Nenhum log encontrado para:[/] {caminho_projeto}")
-        return
-
-    ultimo = arquivos[0]
-    console.rule(f"📜 Último log de {tipo}")
-    with open(ultimo, "r", encoding="utf-8") as f:
-        conteudo = f.read()
-        if Markdown:
-            console.print(Markdown(conteudo))
-        else:
-            console.print(
-                "[yellow]⚠️ Módulo markdown_it não disponível — exibindo texto puro:"
-            )
-            console.print(conteudo)
 
 
 # (restante do código permanece igual)

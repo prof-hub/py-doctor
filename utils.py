@@ -1,6 +1,15 @@
 import os
 import datetime
 import configparser
+from glob import glob
+from rich.console import Console
+
+try:
+    from rich.markdown import Markdown
+except ImportError:  # pragma: no cover - optional dependency
+    Markdown = None
+
+console = Console()
 
 LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
@@ -47,3 +56,32 @@ def carregar_configuracao():
 def obter_workspace():
     config = carregar_configuracao()
     return os.path.expanduser(config.get("workspace", "~/workspace"))
+
+
+def mostrar_ultimo_log(caminho_projeto=None, projeto_path=None, tipo="diagnostico"):
+    """Exibe o conteúdo do log mais recente do ``tipo`` para o projeto."""
+
+    path = caminho_projeto or projeto_path
+    if not path:
+        raise ValueError("caminho_projeto/projeto_path é obrigatório")
+
+    garantir_logs()
+    safe_name = path.replace(os.sep, "_")
+    padrao = os.path.join(LOG_DIR, f"{tipo}_log_{safe_name}_*.txt")
+    arquivos = sorted(glob(padrao), reverse=True)
+    if not arquivos:
+        console.print(f"[red]Nenhum log encontrado para:[/] {path}")
+        return
+
+    ultimo = arquivos[0]
+    console.rule(f"📜 Último log de {tipo}")
+    with open(ultimo, "r", encoding="utf-8") as f:
+        conteudo = f.read()
+        if Markdown:
+            console.print(Markdown(conteudo))
+        else:
+            console.print(
+                "[yellow]⚠️ Módulo markdown_it não disponível — exibindo texto puro:"
+            )
+            console.print(conteudo)
+
