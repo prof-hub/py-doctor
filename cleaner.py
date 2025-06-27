@@ -10,7 +10,6 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-import py_doctor.filesystem as fs
 from py_doctor.utils import LOG_DIR, esta_em_modo_teste, logar
 
 
@@ -21,7 +20,10 @@ def _remover_caminho(caminho, projeto_path):
     """Remove um caminho e registra erros se ocorrerem."""
 
     try:
-        fs.remove_path(caminho)
+        if caminho.is_dir():
+            shutil.rmtree(caminho)
+        else:
+            caminho.unlink()
         return True
     except PermissionError as e:
         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
@@ -129,4 +131,5 @@ def arquivar_logs_antigos(dias):
                     tipo="limpeza",
                     nivel="ERROR",
                 )
+
 

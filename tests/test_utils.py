@@ -17,51 +17,52 @@ console_module.Console = DummyConsole
 
 markdown_module = types.ModuleType("rich.markdown")
 markdown_module.Markdown = lambda x: x
+prompt_module = types.ModuleType("rich.prompt")
+prompt_module.Prompt = lambda *a, **k: None
+panel_module = types.ModuleType("rich.panel")
+panel_module.Panel = lambda *a, **k: None
 
 sys.modules.setdefault("rich.console", console_module)
 sys.modules.setdefault("rich.markdown", markdown_module)
+sys.modules.setdefault("rich.prompt", prompt_module)
+sys.modules.setdefault("rich.panel", panel_module)
 sys.modules.setdefault("rich", types.ModuleType("rich"))
 sys.modules["rich"].console = console_module
 sys.modules["rich"].markdown = markdown_module
+sys.modules["rich"].prompt = prompt_module
+sys.modules["rich"].panel = panel_module
 
 from pathlib import Path
+import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import utils
 
 
 def test_log_filename_posix(tmp_path, monkeypatch):
     monkeypatch.setattr(utils, "LOG_DIR", tmp_path)
-    monkeypatch.setattr(utils, "timestamp", lambda: "ts")
+    monkeypatch.setattr(time, "strftime", lambda fmt: "ts")
     utils.garantir_logs()
 
-    projeto = f"dir{os.sep}proj"
-    expected = tmp_path / f"geral_log_{projeto.replace(os.sep, '_')}_ts.txt"
-    caminho = utils.logar("msg", projeto)
-    assert caminho == expected
-    with open(caminho, "r", encoding="utf-8") as f:
-        assert f.read() == "[INFO] msg\n"
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    utils.logar("msg", project, "geral")
+
+    geral = tmp_path / "pydoctor_main_ts.log"
+    local = project / ".pydoctor_geral.log"
+    assert geral.read_text(encoding="utf-8").strip() == "ts [INFO] - msg"
+    assert local.read_text(encoding="utf-8") == "msg"
 
 
 def test_log_filename_windows(monkeypatch, tmp_path):
     monkeypatch.setattr(utils, "LOG_DIR", tmp_path)
-    monkeypatch.setattr(utils.os, "sep", "\\")
-    monkeypatch.setattr(utils, "timestamp", lambda: "ts")
+    monkeypatch.setattr(time, "strftime", lambda fmt: "ts")
     utils.garantir_logs()
 
-    projeto = "dir\\proj"
-    opened = {}
+    project = tmp_path / "proj_win"
+    project.mkdir()
 
-    def dummy_open(path, mode="w", encoding=None):
-        opened["path"] = path
-        class Dummy:
-            def __enter__(self):
-                return self
-            def __exit__(self, exc_type, exc, tb):
-                pass
-            def write(self, data):
-                pass
-        return Dummy()
+    utils.logar("msg", project, "geral")
 
-    monkeypatch.setattr(builtins, "open", dummy_open)
-
-    caminho = utils.logar("msg", projeto)
+    assert (tmp_path / "pydoctor_main_ts.log").exists()
+    assert (project / ".pydoctor_geral.log").exists()

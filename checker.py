@@ -9,8 +9,6 @@ import ast
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
-
-import py_doctor.filesystem as fs
 from py_doctor.utils import (
     logar,
     mostrar_ultimo_log,
@@ -202,7 +200,7 @@ def verificar_consistencia_requirements(projeto_path, requeridos):
             if f.endswith(".py"):
                 caminho = Path(root) / f
                 try:
-                    codigo = fs.read_text(caminho, default="")
+                    codigo = caminho.read_text(encoding="utf-8")
                     tree = ast.parse(codigo, filename=str(caminho))
                     for node in ast.walk(tree):
                         if isinstance(node, ast.Import):
@@ -260,7 +258,7 @@ def atualizar_requirements(projeto_path):
             if f.endswith(".py"):
                 caminho = Path(root) / f
                 try:
-                    codigo = fs.read_text(caminho, default="")
+                    codigo = caminho.read_text(encoding="utf-8")
                     tree = ast.parse(codigo, filename=str(caminho))
                     for node in ast.walk(tree):
                         if isinstance(node, ast.Import):
@@ -286,7 +284,7 @@ def atualizar_requirements(projeto_path):
     if not modo_teste:
         backup = Path(str(req_path) + ".bak")
         req_path.rename(backup)
-        fs.write_text(req_path, "\n".join(novo_req) + "\n")
+        req_path.write_text("\n".join(novo_req) + "\n", encoding="utf-8")
         console.print(
             f"[green]✔ requirements.txt atualizado com sucesso. Backup salvo como: {backup}"
         )

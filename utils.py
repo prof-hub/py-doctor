@@ -1,230 +1,122 @@
-"""Utilitários de configuração e registro de logs."""
+# Utilidades de configuracao e log para Py-Doctor
 
-import os
-import datetime
 import configparser
-from functools import lru_cache
-from glob import glob
+import time
 from pathlib import Path
 from rich.console import Console
+from rich.prompt import Prompt
+from rich.panel import Panel
 
-try:  # pragma: no cover - optional dependency
-    from rich.markdown import Markdown
-except ImportError:  # pragma: no cover - optional dependency
-    Markdown = None
+# --- Constantes ---
+CONFIG_FILE = ".pydoctor_config"
+LOG_DIR = Path("logs")
+DEFAULT_CONFIG_CREATED = False
 
 console = Console()
 
+# --- Funcoes de Configuracao ---
 
-LOG_DIR = Path("logs")
-CONFIG_FILE = Path(".pydoctor_config")
-_CONFIG_CACHE = None
-# Marcado como ``True`` quando um arquivo de configuração padrão é gerado
-DEFAULT_CONFIG_CREATED = False
+def _criar_config_padrao(workspace_path: Path):
+    """Cria um arquivo .pydoctor_config com o caminho do workspace fornecido."""
+    config = configparser.ConfigParser()
+    config["DEFAULT"] = {"workspace": str(workspace_path), "modo_teste": "false"}
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        config.write(f)
+    console.print(
+        f"✅ [green]Arquivo de configuração '{CONFIG_FILE}' salvo para uso futuro.[/green]"
+    )
 
+
+def obter_workspace() -> Path:
+    """Obtém o caminho do workspace, com fallback interativo."""
+    config = configparser.ConfigParser()
+    config_path = Path(CONFIG_FILE)
+    global DEFAULT_CONFIG_CREATED
+
+    if config_path.exists():
+        try:
+            config.read(config_path)
+            workspace_str = config.get("DEFAULT", "workspace")
+            workspace = Path(workspace_str).resolve()
+            if workspace.is_dir():
+                return workspace
+        except (configparser.Error, KeyError):
+            console.print(f"[yellow]⚠️  Aviso: O arquivo '{CONFIG_FILE}' está corrompido ou mal formatado.[/yellow]")
+
+    console.print(Panel(
+        f"[bold yellow]Arquivo '{CONFIG_FILE}' não encontrado ou inválido.[/bold yellow]\n\nPor favor, forneça o caminho para a sua pasta de projetos (workspace).",
+        title="[cyan]Configuração Necessária[/cyan]",
+        border_style="yellow",
+    ))
+
+    while True:
+        path_str = Prompt.ask("[bold]📂 Digite o caminho do workspace[/bold]")
+        if not path_str:
+            console.print("[red]❌ O caminho não pode ser vazio. Tente novamente.[/red]")
+            continue
+
+        workspace = Path(path_str).expanduser().resolve()
+        if workspace.is_dir():
+            console.print(f"✅ [green]Workspace definido como:[/green] {workspace}")
+            _criar_config_padrao(workspace)
+            DEFAULT_CONFIG_CREATED = True
+            return workspace
+        else:
+            console.print(f"[red]❌ Erro: O caminho '{workspace}' não existe ou não é um diretório.[/red]")
+
+
+def esta_em_modo_teste() -> bool:
+    """Verifica se o modo de teste está ativo no arquivo de configuração."""
+    config = configparser.ConfigParser()
+    if not Path(CONFIG_FILE).exists():
+        return False
+    config.read(CONFIG_FILE)
+    return config.getboolean("DEFAULT", "modo_teste", fallback=False)
+
+# --- Funcoes de Log ---
 
 def garantir_logs():
-    """Garante que o diretório de logs existe.
-
-    Returns:
-        None
-    """
-
-    Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
+    """Cria o diretório de logs se ele não existir."""
+    LOG_DIR.mkdir(exist_ok=True)
 
 
-def timestamp():
-    """Retorna o timestamp atual formatado para nomes de arquivo.
+def logar(conteudo: str, caminho_projeto: Path, tipo: str, nivel: str = "INFO"):
+    """Salva uma string de log em um arquivo de log geral e em um log local do projeto."""
+    garantir_logs()
+    log_geral_path = LOG_DIR / f"pydoctor_main_{time.strftime('%Y%m%d')}.log"
+    log_local_path = caminho_projeto / f".pydoctor_{tipo}.log"
 
-    Returns:
-        str: Timestamp no formato ``YYYY-MM-DD_HH-MM-SS``.
-    """
+    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    log_entry = f"{timestamp} [{nivel}] - {conteudo}"
 
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    with log_geral_path.open("a", encoding="utf-8") as f:
+        f.write(f"{log_entry}\n")
 
-
-def logar(texto, projeto, tipo="geral", nivel="INFO"):
-    """Grava mensagens de log em ``LOG_DIR``.
-
-    Args:
-        texto (str): Mensagem a ser registrada.
-        projeto (str): Identificação do projeto relacionado.
-        tipo (str, optional): Prefixo do nome do arquivo de log. Defaults to
-            ``"geral"``.
-        nivel (str, optional): Severidade da mensagem. Defaults to ``"INFO"``.
-
-    Returns:
-        Path: Caminho completo do arquivo de log criado.
-    """
-
-    nome_log = f"{tipo}_log_{str(projeto).replace(os.sep, '_')}_{timestamp()}.txt"
-    caminho = Path(LOG_DIR) / nome_log
-
-    with open(caminho, "w", encoding="utf-8") as f:
-        f.write(f"[{nivel}] {texto}\n")
-
-    print(f"📝 Log salvo em: {caminho}")
-    return Path(caminho)
-
-
-def esta_em_modo_teste():
-    """Verifica se o modo de teste está habilitado.
-
-    Returns:
-        bool: ``True`` se a configuração indicar modo de teste.
-    """
-
-    config = carregar_configuracao()
-    return config.get("modo_teste", "false").lower() == "true"
-
-
-def criar_config_padrao(workspace: Path | None = None):
-    """Gera um arquivo de configuração padrão.
-
-    Args:
-        workspace (Path | None): Caminho do workspace a ser usado. Se ``None``,
-            :func:`Path.cwd` é utilizado.
-
-    Returns:
-        None
-    """
-
-    workspace = Path.cwd() if workspace is None else Path(workspace)
-    conteudo = (
-        "# Arquivo gerado automaticamente pelo Py-Doctor\n"
-        "# Ajuste o caminho do workspace conforme necessário.\n"
-        "[DEFAULT]\n"
-        f"workspace={workspace}\n"
-        "modo_teste=false\n"
-    )
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+    with log_local_path.open("w", encoding="utf-8") as f:
         f.write(conteudo)
 
 
-def carregar_configuracao():
-    """Lê o arquivo ``.pydoctor_config`` com cache."""
+def mostrar_ultimo_log(caminho_projeto: Path, tipo: str = "diagnostico"):
+    """Exibe o último log de um tipo específico salvo no diretório do projeto."""
+    log_path = caminho_projeto / f".pydoctor_{tipo}.log"
+    if not log_path.exists():
+        console.print(f"[red]Nenhum log do tipo '{tipo}' encontrado em {caminho_projeto.name}[/red]")
+        return
+    with log_path.open("r", encoding="utf-8") as f:
+        conteudo = f.read()
+    console.print(Panel(conteudo, title=f"Último log de {tipo}"))
 
-    global _CONFIG_CACHE, DEFAULT_CONFIG_CREATED
-    if _CONFIG_CACHE is not None:
-        return _CONFIG_CACHE
+# --- Funcoes de Arquivo ---
 
-    parser = configparser.ConfigParser()
-        try:
-            with CONFIG_FILE.open("r", encoding="utf-8") as f:
-                conteudo = f.read()
-
-            # Detecta se o arquivo possui cabeçalho de seção
-            linhas = [
-                linha.strip()
-                for linha in conteudo.splitlines()
-                if linha.strip() and not linha.strip().startswith(("#", ";"))
-            ]
-            tem_header = linhas and linhas[0].startswith("[")
-
-            if not tem_header:
-                conteudo = "[DEFAULT]\n" + conteudo
-
-            parser.read_string(conteudo)
-            _CONFIG_CACHE = dict(parser["DEFAULT"]) if "DEFAULT" in parser else {}
-        except Exception as e:  # pragma: no cover - safe guard for parse issues
-            console.print(f"[red]Erro ao ler {CONFIG_FILE}: {e}[/]")
-            _CONFIG_CACHE = {}
-    else:
-        _CONFIG_CACHE = {}
-
-    return _CONFIG_CACHE
-
-
-def reload_config():
-    """Força a releitura do arquivo de configuração."""
-    global _CONFIG_CACHE
-    _CONFIG_CACHE = None
-    return carregar_configuracao()
-
-
-def obter_workspace():
-    """Obtém o caminho configurado para o workspace.
-
-    Returns:
-        str: Caminho absoluto do diretório configurado.
-    """
-
-    config = carregar_configuracao()
-
-
-def load_requirements(projeto_path):
-    """Carrega as dependências de ``requirements.txt`` com cache.
-
-    Args:
-        projeto_path (str): Caminho do projeto.
-
-    Returns:
-        list[str]: Lista de dependências declaradas.
-    """
-
-    req_path = Path(projeto_path) / "requirements.txt"
+def load_requirements(caminho_projeto: Path) -> list[str]:
+    """Lê o arquivo requirements.txt e retorna uma lista de dependências."""
+    req_path = caminho_projeto / "requirements.txt"
     if not req_path.exists():
         return []
-    mtime = req_path.stat().st_mtime
-    return _load_requirements_cached(req_path, mtime)
+    with req_path.open("r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
 
 
-@lru_cache(maxsize=None)
-def _load_requirements_cached(req_path, _mtime):
-    with open(req_path, "r", encoding="utf-8") as f:
-        return [
-            linha.strip()
-            for linha in f
-            if linha.strip() and not linha.startswith("#")
-        ]
 
 
-def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
-    """Exibe o conteúdo do log mais recente do ``tipo`` para ``caminho_projeto``.
-
-    Args:
-        caminho_projeto (str): Caminho do projeto.
-        tipo (str): Prefixo do log (``diagnostico`` ou ``limpeza``).
-
-    Returns:
-        None
-    """
-
-    path = Path(caminho_projeto)
-
-    garantir_logs()
-    safe_name = str(path).replace(os.sep, "_")
-    padrao = str(LOG_DIR / f"{tipo}_log_{safe_name}_*.txt")
-    arquivos = sorted(glob(padrao), reverse=True)
-    if not arquivos:
-        console.print(f"[red]Nenhum log encontrado para:[/] {path}")
-        return
-
-    ultimo = arquivos[0]
-    console.rule(f"📜 Último log de {tipo}")
-    with open(ultimo, "r", encoding="utf-8") as f:
-        conteudo = f.read()
-        if Markdown:
-            console.print(Markdown(conteudo))
-        else:
-            console.print(
-                "[yellow]⚠️ Módulo markdown_it não disponível — exibindo texto puro:"
-            )
-            console.print(conteudo)
-
-
-__all__ = [
-    "garantir_logs",
-    "timestamp",
-    "logar",
-    "esta_em_modo_teste",
-    "criar_config_padrao",
-    "carregar_configuracao",
-    "reload_config",
-    "obter_workspace",
-    "load_requirements",
-    "mostrar_ultimo_log",
-    "DEFAULT_CONFIG_CREATED",
-    "CONFIG_FILE",
-]
 

@@ -208,6 +208,9 @@ if __name__ == "__main__":
     p_limpar = sub.add_parser("limpar", help="Limpar resíduos do projeto")
     p_limpar.add_argument("caminho", help="Caminho para o projeto")
 
+    p_arquivar = sub.add_parser("arquivar-logs", help="Arquivar logs antigos")
+    p_arquivar.add_argument("dias", type=int, help="Idade mínima em dias para arquivar os logs")
+
     args = parser.parse_args()
 
     LOG_FILE = abrir_log_file()
@@ -217,6 +220,9 @@ if __name__ == "__main__":
             diagnosticar_projeto(args.caminho)
         elif args.comando == "limpar":
             limpar_pycache(args.caminho)
+        elif args.comando == "arquivar-logs":
+            from cleaner import arquivar_logs_antigos
+            arquivar_logs_antigos(args.dias)
         else:
             menu()
     finally:
