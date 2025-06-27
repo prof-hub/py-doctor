@@ -6,6 +6,7 @@ import os
 import subprocess
 import time
 import ast
+from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
@@ -30,6 +31,7 @@ def diagnosticar_projeto(caminho_projeto):
     Returns:
         None
     """
+    caminho_projeto = Path(caminho_projeto)
     requeridos = load_requirements(caminho_projeto)
 
     while True:
@@ -44,8 +46,8 @@ def diagnosticar_projeto(caminho_projeto):
         if escolha == "1":
             diagnostico_basico(caminho_projeto)
         elif escolha == "2":
-            req_path = os.path.join(caminho_projeto, "requirements.txt")
-            if os.path.exists(req_path):
+            req_path = caminho_projeto / "requirements.txt"
+            if req_path.exists():
                 requeridos = load_requirements(caminho_projeto)
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
@@ -70,9 +72,10 @@ def restaurar_backup_requirements(projeto_path):
     Returns:
         None
     """
-    req_path = os.path.join(projeto_path, "requirements.txt")
-    backup = req_path + ".bak"
-    if not os.path.exists(backup):
+    projeto_path = Path(projeto_path)
+    req_path = projeto_path / "requirements.txt"
+    backup = Path(str(req_path) + ".bak")
+    if not backup.exists():
         console.print("[red]❌ Nenhum backup encontrado para restaurar.")
         return
     try:
@@ -86,7 +89,7 @@ def restaurar_backup_requirements(projeto_path):
         if confirm != "s":
             console.print("[cyan]🛑 Restauração cancelada pelo usuário.")
             return
-        os.replace(backup, req_path)
+        backup.replace(req_path)
         console.print(
             f"[green]✔ requirements.txt restaurado com sucesso a partir de {backup}"
         )
@@ -103,13 +106,14 @@ def diagnostico_basico(caminho_projeto):
     Returns:
         None
     """
-    req_path = os.path.join(caminho_projeto, "requirements.txt")
+    caminho_projeto = Path(caminho_projeto)
+    req_path = caminho_projeto / "requirements.txt"
     modo_teste = esta_em_modo_teste()
     requeridos = load_requirements(caminho_projeto)
     log = f"Diagnóstico do projeto: {caminho_projeto}\n"
     inicio = time.time()
 
-    if not os.path.exists(req_path):
+    if not req_path.exists():
         msg = "[red]❌ Nenhum requirements.txt encontrado.[/]"
         console.print(msg)
         log += "Requisitos não encontrados."
@@ -165,7 +169,7 @@ def diagnostico_basico(caminho_projeto):
                 )
             elif inst == "2":
                 console.print("⬇️ Instalando com requirements.txt completo...")
-                resultado = subprocess.call(["pip", "install", "-r", req_path])
+                resultado = subprocess.call(["pip", "install", "-r", str(req_path)])
                 log += f"Instalado com pip install -r requirements.txt Código de saída: {resultado}"
             else:
                 console.print("[yellow]Instalação cancelada.")
@@ -190,15 +194,16 @@ def verificar_consistencia_requirements(projeto_path, requeridos):
         None
     """
     console.rule("[bold magenta]📊 Verificando consistência do requirements.txt")
+    projeto_path = Path(projeto_path)
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
     for root, _, files in os.walk(projeto_path):
         for f in files:
             if f.endswith(".py"):
-                caminho = os.path.join(root, f)
+                caminho = Path(root) / f
                 try:
                     codigo = fs.read_text(caminho, default="")
-                    tree = ast.parse(codigo, filename=caminho)
+                    tree = ast.parse(codigo, filename=str(caminho))
                     for node in ast.walk(tree):
                         if isinstance(node, ast.Import):
                             for alias in node.names:
@@ -240,10 +245,11 @@ def atualizar_requirements(projeto_path):
     Returns:
         None
     """
-    req_path = os.path.join(projeto_path, "requirements.txt")
+    projeto_path = Path(projeto_path)
+    req_path = projeto_path / "requirements.txt"
     modo_teste = esta_em_modo_teste()
     requeridos = load_requirements(projeto_path)
-    if not os.path.exists(req_path):
+    if not req_path.exists():
         console.print("[red]❌ requirements.txt não encontrado.")
         return
 
@@ -252,10 +258,10 @@ def atualizar_requirements(projeto_path):
     for root, _, files in os.walk(projeto_path):
         for f in files:
             if f.endswith(".py"):
-                caminho = os.path.join(root, f)
+                caminho = Path(root) / f
                 try:
                     codigo = fs.read_text(caminho, default="")
-                    tree = ast.parse(codigo, filename=caminho)
+                    tree = ast.parse(codigo, filename=str(caminho))
                     for node in ast.walk(tree):
                         if isinstance(node, ast.Import):
                             for alias in node.names:
@@ -278,8 +284,8 @@ def atualizar_requirements(projeto_path):
     novo_req += [f"{m}" for m in faltando if m not in novo_req]
 
     if not modo_teste:
-        backup = req_path + ".bak"
-        os.rename(req_path, backup)
+        backup = Path(str(req_path) + ".bak")
+        req_path.rename(backup)
         fs.write_text(req_path, "\n".join(novo_req) + "\n")
         console.print(
             f"[green]✔ requirements.txt atualizado com sucesso. Backup salvo como: {backup}"
