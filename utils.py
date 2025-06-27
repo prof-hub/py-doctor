@@ -34,14 +34,19 @@ def esta_em_modo_teste():
 
 
 def carregar_configuracao():
-    config = {}
+    parser = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            for linha in f:
-                if "=" in linha:
-                    chave, valor = linha.strip().split("=", 1)
-                    config[chave.strip()] = valor.strip()
-    return config
+            data = f.read()
+        try:
+            if data.lstrip().startswith("["):
+                parser.read_string(data)
+            else:
+                parser.read_string("[DEFAULT]\n" + data)
+        except configparser.Error as e:
+            print(f"Erro ao ler {CONFIG_FILE}: {e}")
+            return {}
+    return dict(parser.defaults())
 
 
 def obter_workspace():
