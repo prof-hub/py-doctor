@@ -59,9 +59,6 @@ def diagnosticar_projeto(caminho_projeto):
 
 
 
-# (restante do código permanece igual)
-
-
 # def atualizar_requirements(...)
 # def diagnostico_basico(...)
 # def verificar_consistencia_requirements(...)
