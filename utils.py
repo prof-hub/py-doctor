@@ -5,6 +5,7 @@ import datetime
 import configparser
 from functools import lru_cache
 from glob import glob
+from pathlib import Path
 from rich.console import Console
 
 try:  # pragma: no cover - optional dependency
@@ -18,6 +19,8 @@ console = Console()
 LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
 _CONFIG_CACHE = None
+# Marcado como ``True`` quando um arquivo de configuração padrão é gerado
+DEFAULT_CONFIG_CREATED = False
 
 
 def garantir_logs():
@@ -75,14 +78,41 @@ def esta_em_modo_teste():
     return config.get("modo_teste", "false").lower() == "true"
 
 
+def criar_config_padrao(workspace: Path | None = None):
+    """Gera um arquivo de configuração padrão.
+
+    Args:
+        workspace (Path | None): Caminho do workspace a ser usado. Se ``None``,
+            :func:`Path.cwd` é utilizado.
+
+    Returns:
+        None
+    """
+
+    workspace = Path.cwd() if workspace is None else Path(workspace)
+    conteudo = (
+        "# Arquivo gerado automaticamente pelo Py-Doctor\n"
+        "# Ajuste o caminho do workspace conforme necessário.\n"
+        "[DEFAULT]\n"
+        f"workspace={workspace}\n"
+        "modo_teste=false\n"
+    )
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        f.write(conteudo)
+
+
 def carregar_configuracao():
     """Lê o arquivo ``.pydoctor_config`` com cache."""
 
-    global _CONFIG_CACHE
+    global _CONFIG_CACHE, DEFAULT_CONFIG_CREATED
     if _CONFIG_CACHE is not None:
         return _CONFIG_CACHE
 
     parser = configparser.ConfigParser()
+    if not os.path.exists(CONFIG_FILE):
+        criar_config_padrao()
+        DEFAULT_CONFIG_CREATED = True
+
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -125,7 +155,8 @@ def obter_workspace():
     """
 
     config = carregar_configuracao()
-    return os.path.expanduser(config.get("workspace", "~/workspace"))
+    padrao = str(Path.cwd())
+    return os.path.expanduser(config.get("workspace", padrao))
 
 
 def load_requirements(projeto_path):
@@ -194,10 +225,13 @@ __all__ = [
     "timestamp",
     "logar",
     "esta_em_modo_teste",
+    "criar_config_padrao",
     "carregar_configuracao",
     "reload_config",
     "obter_workspace",
     "load_requirements",
     "mostrar_ultimo_log",
+    "DEFAULT_CONFIG_CREATED",
+    "CONFIG_FILE",
 ]
 

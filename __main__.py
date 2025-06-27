@@ -19,7 +19,13 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 import py_doctor.filesystem as fs
-from py_doctor.utils import LOG_DIR, garantir_logs, obter_workspace
+from py_doctor.utils import (
+    LOG_DIR,
+    garantir_logs,
+    obter_workspace,
+    DEFAULT_CONFIG_CREATED,
+    CONFIG_FILE,
+)
 
 from py_doctor.checker import diagnosticar_projeto
 from py_doctor.cleaner import limpar_pycache
@@ -150,6 +156,10 @@ def menu():
     )
 
     workspace = obter_workspace()
+    if DEFAULT_CONFIG_CREATED:
+        console.print(
+            f"[yellow]⚠️ Arquivo de configuração '{CONFIG_FILE}' criado com valores padrão.[/]"
+        )
     console.print(f"[dim]ℹ️ Usando configuração de workspace: {workspace}[/]")
     registrar_log(f"Workspace carregado: {workspace}")
 
