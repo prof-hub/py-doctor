@@ -17,7 +17,6 @@ def timestamp():
 def logar(texto, projeto, tipo="geral", nivel="INFO"):
     """Grava mensagens de log em ``LOG_DIR`` com nivel de severidade."""
 
-    garantir_logs()
     nome_log = f"{tipo}_log_{projeto.replace('/', '_')}_{timestamp()}.txt"
     caminho = os.path.join(LOG_DIR, nome_log)
 
