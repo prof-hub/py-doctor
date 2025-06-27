@@ -19,6 +19,8 @@ console = Console()
 LOG_DIR = Path("logs")
 CONFIG_FILE = Path(".pydoctor_config")
 _CONFIG_CACHE = None
+# Marcado como ``True`` quando um arquivo de configuração padrão é gerado
+DEFAULT_CONFIG_CREATED = False
 
 
 def garantir_logs():
@@ -76,15 +78,37 @@ def esta_em_modo_teste():
     return config.get("modo_teste", "false").lower() == "true"
 
 
+def criar_config_padrao(workspace: Path | None = None):
+    """Gera um arquivo de configuração padrão.
+
+    Args:
+        workspace (Path | None): Caminho do workspace a ser usado. Se ``None``,
+            :func:`Path.cwd` é utilizado.
+
+    Returns:
+        None
+    """
+
+    workspace = Path.cwd() if workspace is None else Path(workspace)
+    conteudo = (
+        "# Arquivo gerado automaticamente pelo Py-Doctor\n"
+        "# Ajuste o caminho do workspace conforme necessário.\n"
+        "[DEFAULT]\n"
+        f"workspace={workspace}\n"
+        "modo_teste=false\n"
+    )
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        f.write(conteudo)
+
+
 def carregar_configuracao():
     """Lê o arquivo ``.pydoctor_config`` com cache."""
 
-    global _CONFIG_CACHE
+    global _CONFIG_CACHE, DEFAULT_CONFIG_CREATED
     if _CONFIG_CACHE is not None:
         return _CONFIG_CACHE
 
     parser = configparser.ConfigParser()
-    if CONFIG_FILE.exists():
         try:
             with CONFIG_FILE.open("r", encoding="utf-8") as f:
                 conteudo = f.read()
@@ -126,7 +150,6 @@ def obter_workspace():
     """
 
     config = carregar_configuracao()
-    return Path(config.get("workspace", "~/workspace")).expanduser()
 
 
 def load_requirements(projeto_path):
@@ -195,10 +218,13 @@ __all__ = [
     "timestamp",
     "logar",
     "esta_em_modo_teste",
+    "criar_config_padrao",
     "carregar_configuracao",
     "reload_config",
     "obter_workspace",
     "load_requirements",
     "mostrar_ultimo_log",
+    "DEFAULT_CONFIG_CREATED",
+    "CONFIG_FILE",
 ]
 

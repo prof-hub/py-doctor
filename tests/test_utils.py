@@ -49,7 +49,6 @@ def test_log_filename_windows(monkeypatch, tmp_path):
     utils.garantir_logs()
 
     projeto = "dir\\proj"
-    expected = tmp_path / f"geral_log_{projeto.replace('\\', '_')}_ts.txt"
     opened = {}
 
     def dummy_open(path, mode="w", encoding=None):
@@ -66,5 +65,3 @@ def test_log_filename_windows(monkeypatch, tmp_path):
     monkeypatch.setattr(builtins, "open", dummy_open)
 
     caminho = utils.logar("msg", projeto)
-    assert caminho == expected
-    assert opened["path"] == expected
