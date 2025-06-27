@@ -51,7 +51,8 @@ def test_log_filename_windows(monkeypatch, tmp_path):
     utils.garantir_logs()
 
     projeto = "dir\\proj"
-    expected = f"geral_log_{projeto.replace('\\', '_')}_ts.txt"
+    safe_proj = projeto.replace("\\", "_")
+    expected = f"geral_log_{safe_proj}_ts.txt"
     expected_path = ntpath.join(str(tmp_path), expected)
     opened = {}
 
