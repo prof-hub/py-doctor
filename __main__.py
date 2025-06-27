@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from py_doctor.checker import diagnosticar_projeto
 from py_doctor.cleaner import limpar_pycache
 from py_doctor.utils import obter_workspace
+from py_doctor import filesystem as fs
 
 console = Console()
 
@@ -44,11 +45,11 @@ def listar_projetos(workspace):
         return []
 
     projetos = []
-    for nome in sorted(os.listdir(pasta_python)):
+    for nome in sorted(fs.list_dir(pasta_python)):
         caminho = os.path.join(pasta_python, nome)
         if not os.path.isdir(caminho):
             continue
-        arquivos = os.listdir(caminho)
+        arquivos = fs.list_dir(caminho)
         if any(f.endswith(".py") for f in arquivos) or "requirements.txt" in arquivos:
             projetos.append(caminho)
 

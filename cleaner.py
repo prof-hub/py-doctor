@@ -6,7 +6,7 @@ import shutil
 from glob import glob
 from rich.console import Console
 from rich.table import Table
-from py_doctor.utils import logar, esta_em_modo_teste, LOG_DIR, mostrar_ultimo_log
+
 
 console = Console()
 
@@ -24,7 +24,7 @@ def limpar_pycache(projeto_path):
                 removidos.append(("__pycache__", caminho))
                 if not modo_teste:
                     try:
-                        shutil.rmtree(caminho)
+                        fs.remove_path(caminho)
                     except PermissionError as e:
                         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
                         logar(
@@ -48,7 +48,7 @@ def limpar_pycache(projeto_path):
                 removidos.append((f[-4:], caminho))
                 if not modo_teste:
                     try:
-                        os.remove(caminho)
+                        fs.remove_path(caminho)
                     except PermissionError as e:
                         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
                         logar(

@@ -12,7 +12,7 @@ try:
     from rich.markdown import Markdown
 except ImportError:
     Markdown = None
-from py_doctor.utils import logar, esta_em_modo_teste, mostrar_ultimo_log
+
 
 console = Console()
 
@@ -32,12 +32,7 @@ def diagnosticar_projeto(caminho_projeto):
         elif escolha == "2":
             req_path = os.path.join(caminho_projeto, "requirements.txt")
             if os.path.exists(req_path):
-                with open(req_path, "r", encoding="utf-8") as f:
-                    requeridos = [
-                        linha.strip()
-                        for linha in f
-                        if linha.strip() and not linha.startswith("#")
-                    ]
+
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
                 console.print("[red]requirements.txt não encontrado.")
@@ -49,6 +44,7 @@ def diagnosticar_projeto(caminho_projeto):
             restaurar_backup_requirements(caminho_projeto)
         else:
             break
+
 
 
 
@@ -97,10 +93,7 @@ def diagnostico_basico(caminho_projeto):
         logar(log, caminho_projeto, tipo="diagnostico")
         return
 
-    with open(req_path, "r", encoding="utf-8") as f:
-        requeridos = [
-            linha.strip() for linha in f if linha.strip() and not linha.startswith("#")
-        ]
+
 
     console.print(
         f"📄 {len(requeridos)} dependência(s) declarada(s) em requirements.txt"
@@ -173,15 +166,15 @@ def verificar_consistencia_requirements(projeto_path, requeridos):
             if f.endswith(".py"):
                 caminho = os.path.join(root, f)
                 try:
-                    with open(caminho, "r", encoding="utf-8") as src:
-                        tree = ast.parse(src.read(), filename=caminho)
-                        for node in ast.walk(tree):
-                            if isinstance(node, ast.Import):
-                                for alias in node.names:
-                                    usados.add(alias.name.split(".")[0])
-                            elif isinstance(node, ast.ImportFrom):
-                                if node.module:
-                                    usados.add(node.module.split(".")[0])
+                    codigo = fs.read_text(caminho, default="")
+                    tree = ast.parse(codigo, filename=caminho)
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Import):
+                            for alias in node.names:
+                                usados.add(alias.name.split(".")[0])
+                        elif isinstance(node, ast.ImportFrom):
+                            if node.module:
+                                usados.add(node.module.split(".")[0])
                 except Exception as e:
                     console.print(f"[yellow]Aviso: erro ao analisar {caminho}: {e}")
     usados = sorted(usados)
@@ -214,10 +207,6 @@ def atualizar_requirements(projeto_path):
         console.print("[red]❌ requirements.txt não encontrado.")
         return
 
-    with open(req_path, "r", encoding="utf-8") as f:
-        requeridos = [
-            linha.strip() for linha in f if linha.strip() and not linha.startswith("#")
-        ]
 
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
@@ -226,15 +215,15 @@ def atualizar_requirements(projeto_path):
             if f.endswith(".py"):
                 caminho = os.path.join(root, f)
                 try:
-                    with open(caminho, "r", encoding="utf-8") as src:
-                        tree = ast.parse(src.read(), filename=caminho)
-                        for node in ast.walk(tree):
-                            if isinstance(node, ast.Import):
-                                for alias in node.names:
-                                    usados.add(alias.name.split(".")[0])
-                            elif isinstance(node, ast.ImportFrom):
-                                if node.module:
-                                    usados.add(node.module.split(".")[0])
+                    codigo = fs.read_text(caminho, default="")
+                    tree = ast.parse(codigo, filename=caminho)
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Import):
+                            for alias in node.names:
+                                usados.add(alias.name.split(".")[0])
+                        elif isinstance(node, ast.ImportFrom):
+                            if node.module:
+                                usados.add(node.module.split(".")[0])
                 except Exception as e:
                     console.print(f"[yellow]Aviso: erro ao analisar {caminho}: {e}")
 
@@ -252,9 +241,7 @@ def atualizar_requirements(projeto_path):
     if not modo_teste:
         backup = req_path + ".bak"
         os.rename(req_path, backup)
-        with open(req_path, "w", encoding="utf-8") as f:
-            for r in novo_req:
-                f.write(r + "\n")
+        fs.write_text(req_path, "\n".join(novo_req) + "\n")
         console.print(
             f"[green]✔ requirements.txt atualizado com sucesso. Backup salvo como: {backup}"
         )
