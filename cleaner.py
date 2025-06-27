@@ -1,18 +1,28 @@
 # py-doctor/cleaner.py
 
+"""Rotinas de limpeza de arquivos e gestão de logs."""
+
 import os
 import time
 import shutil
 from glob import glob
 from rich.console import Console
 from rich.table import Table
-from rich.markdown import Markdown
-from py_doctor.utils import logar, esta_em_modo_teste, LOG_DIR
+
 
 console = Console()
 
 
 def limpar_pycache(projeto_path):
+    """Remove pastas ``__pycache__`` e arquivos temporários.
+
+    Args:
+        projeto_path (str): Diretório do projeto que será limpo.
+
+    Returns:
+        None
+    """
+
     console.rule(f"[bold red]🧹 Limpando: {projeto_path}")
     modo_teste = esta_em_modo_teste()
     removidos = []
@@ -25,7 +35,7 @@ def limpar_pycache(projeto_path):
                 removidos.append(("__pycache__", caminho))
                 if not modo_teste:
                     try:
-                        shutil.rmtree(caminho)
+                        fs.remove_path(caminho)
                     except PermissionError as e:
                         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
                         logar(
@@ -49,7 +59,7 @@ def limpar_pycache(projeto_path):
                 removidos.append((f[-4:], caminho))
                 if not modo_teste:
                     try:
-                        os.remove(caminho)
+                        fs.remove_path(caminho)
                     except PermissionError as e:
                         console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
                         logar(
@@ -95,22 +105,16 @@ def limpar_pycache(projeto_path):
     logar(texto_log, projeto_path, tipo="limpeza")
 
 
-def mostrar_ultimo_log(projeto_path, tipo="limpeza"):
-    safe_name = projeto_path.replace(os.sep, "_")
-    padrao = f"logs/{tipo}_log_{safe_name}_*.txt"
-    arquivos = sorted(glob(padrao), reverse=True)
-    if not arquivos:
-        console.print(f"[red]Nenhum log encontrado para:[/] {projeto_path}")
-        return
-
-    ultimo = arquivos[0]
-    console.rule(f"📜 Último log de {tipo}")
-    with open(ultimo, "r", encoding="utf-8") as f:
-        console.print(Markdown(f.read()))
-
 
 def arquivar_logs_antigos(dias):
-    """Move arquivos .log antigos para a pasta ``logs_arquivados``."""
+    """Move arquivos ``.log`` antigos para a pasta ``logs_arquivados``.
+
+    Args:
+        dias (int): Idade mínima dos logs (em dias) para serem arquivados.
+
+    Returns:
+        None
+    """
 
     destino = os.path.join(LOG_DIR, "logs_arquivados")
     os.makedirs(destino, exist_ok=True)
