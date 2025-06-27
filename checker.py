@@ -8,18 +8,14 @@ import time
 import ast
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 
 import py_doctor.filesystem as fs
 from py_doctor.utils import (
     logar,
     mostrar_ultimo_log,
+    load_requirements,
+    esta_em_modo_teste,
 )
-
-try:
-    from rich.markdown import Markdown
-except ImportError:
-    Markdown = None
 
 
 console = Console()
@@ -50,6 +46,7 @@ def diagnosticar_projeto(caminho_projeto):
         elif escolha == "2":
             req_path = os.path.join(caminho_projeto, "requirements.txt")
             if os.path.exists(req_path):
+                requeridos = load_requirements(caminho_projeto)
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
                 console.print("[red]requirements.txt não encontrado.")
@@ -57,18 +54,13 @@ def diagnosticar_projeto(caminho_projeto):
             mostrar_ultimo_log(caminho_projeto, tipo="diagnostico")
         elif escolha == "4":
             atualizar_requirements(caminho_projeto)
+            requeridos = load_requirements(caminho_projeto)
         elif escolha == "5":
             restaurar_backup_requirements(caminho_projeto)
+            requeridos = load_requirements(caminho_projeto)
         else:
             break
 
-
-
-
-
-# def atualizar_requirements(...)
-# def diagnostico_basico(...)
-# def verificar_consistencia_requirements(...)
 def restaurar_backup_requirements(projeto_path):
     """Restaura o ``requirements.txt`` a partir de um backup.
 

@@ -16,6 +16,31 @@ from py_doctor.utils import LOG_DIR, esta_em_modo_teste, logar
 console = Console()
 
 
+def _remover_caminho(caminho, projeto_path):
+    """Remove um caminho e registra erros se ocorrerem."""
+
+    try:
+        fs.remove_path(caminho)
+        return True
+    except PermissionError as e:
+        console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
+        logar(
+            f"Permissão negada ao remover {caminho}: {e}",
+            projeto_path,
+            tipo="limpeza",
+            nivel="ERROR",
+        )
+    except Exception as e:
+        console.print(f"[red]Erro ao remover {caminho}: {e}[/]")
+        logar(
+            f"Erro ao remover {caminho}: {e}",
+            projeto_path,
+            tipo="limpeza",
+            nivel="ERROR",
+        )
+    return False
+
+
 def limpar_pycache(projeto_path):
     """Remove pastas ``__pycache__`` e arquivos temporários.
 
@@ -37,48 +62,14 @@ def limpar_pycache(projeto_path):
                 caminho = os.path.join(root, d)
                 removidos.append(("__pycache__", caminho))
                 if not modo_teste:
-                    try:
-                        fs.remove_path(caminho)
-                    except PermissionError as e:
-                        console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
-                        logar(
-                            f"Permissão negada ao remover {caminho}: {e}",
-                            projeto_path,
-                            tipo="limpeza",
-                            nivel="ERROR",
-                        )
-                    except Exception as e:
-                        console.print(f"[red]Erro ao remover {caminho}: {e}[/]")
-                        logar(
-                            f"Erro ao remover {caminho}: {e}",
-                            projeto_path,
-                            tipo="limpeza",
-                            nivel="ERROR",
-                        )
+                    _remover_caminho(caminho, projeto_path)
 
         for f in files:
             if f.endswith((".pyc", ".pyo", ".log")):
                 caminho = os.path.join(root, f)
                 removidos.append((f[-4:], caminho))
                 if not modo_teste:
-                    try:
-                        fs.remove_path(caminho)
-                    except PermissionError as e:
-                        console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
-                        logar(
-                            f"Permissão negada ao remover {caminho}: {e}",
-                            projeto_path,
-                            tipo="limpeza",
-                            nivel="ERROR",
-                        )
-                    except Exception as e:
-                        console.print(f"[red]Erro ao remover {caminho}: {e}[/]")
-                        logar(
-                            f"Erro ao remover {caminho}: {e}",
-                            projeto_path,
-                            tipo="limpeza",
-                            nivel="ERROR",
-                        )
+                    _remover_caminho(caminho, projeto_path)
 
     if not removidos:
         console.print("[green]✅ Nada para limpar.")
@@ -123,7 +114,7 @@ def arquivar_logs_antigos(dias):
     os.makedirs(destino, exist_ok=True)
     limite = time.time() - dias * 86400
 
-    for arquivo in glob(os.path.join(LOG_DIR, "*.log")):
+    for arquivo in glob(os.path.join(LOG_DIR, "*.txt")):
         if os.path.getmtime(arquivo) < limite:
             try:
                 shutil.move(arquivo, os.path.join(destino, os.path.basename(arquivo)))
