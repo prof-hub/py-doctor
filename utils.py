@@ -19,9 +19,6 @@ LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
 _CONFIG_CACHE = None
 
-# Cache para configuracao carregada
-_CONFIG_CACHE = None
-
 
 def garantir_logs():
     """Garante que o diretório de logs existe.
