@@ -54,7 +54,7 @@ def logar(texto, projeto, tipo="geral", nivel="INFO"):
         str: Caminho completo do arquivo de log criado.
     """
 
-    nome_log = f"{tipo}_log_{projeto.replace('/', '_')}_{timestamp()}.txt"
+    nome_log = f"{tipo}_log_{projeto.replace(os.sep, '_')}_{timestamp()}.txt"
     caminho = os.path.join(LOG_DIR, nome_log)
 
     with open(caminho, "w", encoding="utf-8") as f:
