@@ -73,9 +73,6 @@ def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
             console.print(conteudo)
 
 
-# (restante do código permanece igual)
-
-
 # def atualizar_requirements(...)
 # def diagnostico_basico(...)
 # def verificar_consistencia_requirements(...)
