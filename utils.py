@@ -7,6 +7,7 @@ import configparser
 
 LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
+_CONFIG_CACHE = None
 
 
 def garantir_logs():
@@ -66,7 +67,17 @@ def esta_em_modo_teste():
 
 def carregar_configuracao():
 
+    global _CONFIG_CACHE
+    if _CONFIG_CACHE is not None:
+        return _CONFIG_CACHE
 
+    parser = configparser.ConfigParser()
+    if os.path.exists(CONFIG_FILE):
+        parser.read(CONFIG_FILE, encoding="utf-8")
+        _CONFIG_CACHE = parser["DEFAULT"]
+    else:
+        _CONFIG_CACHE = {}
+    return _CONFIG_CACHE
 
 def reload_config():
     """Força a releitura do arquivo de configuração."""
