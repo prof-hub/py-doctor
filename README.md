@@ -32,9 +32,11 @@ conda activate pydoctor_env
 pip install -r requirements.txt
 ```
 
-4. Crie um arquivo `.pydoctor_config` na raiz do repositório contendo o caminho do workspace e se deseja rodar em modo de teste:
+4. Crie um arquivo `.pydoctor_config` na raiz do repositório contendo o caminho do
+   workspace e se deseja rodar em modo de teste. A seção `[DEFAULT]` é necessária:
 
 ```ini
+[DEFAULT]
 workspace=/caminho/para/seu/workspace
 modo_teste=true
 ```
@@ -43,11 +45,11 @@ modo_teste=true
 5. Execute a CLI:
 
 ```bash
-python -m py_doctor
+python __main__.py
 ```
 6. Para ver todas as opções de uso, execute:
 ```bash
-python -m py_doctor --help
+python __main__.py --help
 ```
 
 ---
