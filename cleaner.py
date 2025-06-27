@@ -9,6 +9,9 @@ from glob import glob
 from rich.console import Console
 from rich.table import Table
 
+import py_doctor.filesystem as fs
+from py_doctor.utils import LOG_DIR, esta_em_modo_teste, logar
+
 
 console = Console()
 

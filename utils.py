@@ -17,6 +17,7 @@ console = Console()
 
 LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
+_CONFIG_CACHE = None
 
 # Cache para configuracao carregada
 _CONFIG_CACHE = None
@@ -80,30 +81,13 @@ def esta_em_modo_teste():
 def carregar_configuracao():
     """Lê o arquivo ``.pydoctor_config`` com cache.
 
-    Returns:
-        dict: Mapeamento de opções de configuração.
-    """
-
     global _CONFIG_CACHE
     if _CONFIG_CACHE is not None:
         return _CONFIG_CACHE
 
     parser = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            data = f.read()
-        try:
-            if data.lstrip().startswith("["):
-                parser.read_string(data)
-            else:
-                parser.read_string("[DEFAULT]\n" + data)
-        except configparser.Error as e:  # pragma: no cover - config errors
-            print(f"Erro ao ler {CONFIG_FILE}: {e}")
-            _CONFIG_CACHE = {}
-            return _CONFIG_CACHE
 
-    _CONFIG_CACHE = dict(parser.defaults())
-    return _CONFIG_CACHE
 def reload_config():
     """Força a releitura do arquivo de configuração."""
     global _CONFIG_CACHE
