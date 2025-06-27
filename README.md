@@ -38,11 +38,16 @@ pip install -r requirements.txt
 workspace=/caminho/para/seu/workspace
 modo_teste=true
 ```
+"modo_teste" controla se as ações de instalação e remoção serão apenas simuladas.
 
 5. Execute a CLI:
 
 ```bash
 python -m py_doctor
+```
+6. Para ver todas as opções de uso, execute:
+```bash
+python -m py_doctor --help
 ```
 
 ---

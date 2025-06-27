@@ -15,7 +15,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import datetime
 import argparse
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
@@ -28,11 +27,17 @@ from py_doctor.cleaner import limpar_pycache
 
 console = Console()
 
-# Início do log de execução
-garantir_logs()
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_path = os.path.join(LOG_DIR, f"exec_log_{timestamp}.txt")
-log_file = open(log_path, "w", encoding="utf-8")
+# Arquivo de log principal aberto durante a execução
+LOG_FILE = None
+
+
+def abrir_log_file():
+    """Cria e abre o arquivo de log de execução."""
+
+    garantir_logs()
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_path = os.path.join(LOG_DIR, f"exec_log_{timestamp}.txt")
+    return open(log_path, "w", encoding="utf-8")
 
 
 def registrar_log(texto):
@@ -45,11 +50,12 @@ def registrar_log(texto):
         None
     """
 
-    log_file.write(f"{datetime.datetime.now().isoformat()} - {texto}\n")
-    log_file.flush()
+    if LOG_FILE:
+        LOG_FILE.write(f"{datetime.datetime.now().isoformat()} - {texto}\n")
+        LOG_FILE.flush()
 
 
-def listar_projetos(workspace):
+def listar_projetos(workspace, subdir="python"):
     """Varre o diretório informado em busca de subprojetos Python.
 
     Args:
@@ -59,15 +65,15 @@ def listar_projetos(workspace):
         list[str]: Lista de caminhos para projetos encontrados.
     """
 
-    pasta_python = os.path.join(workspace, "python")
+    pasta_python = os.path.join(workspace, subdir)
     console.print(f"\n[cyan]🔍 Procurando projetos em:[/] {pasta_python}\n")
     registrar_log(f"Verificando subpastas diretas em: {pasta_python}")
 
     if not os.path.isdir(pasta_python):
         console.print(
-            f"[red]❌ Subdiretório 'python/' não encontrado dentro do workspace.[/]"
+            f"[red]❌ Subdiretório '{subdir}/' não encontrado dentro do workspace.[/]"
         )
-        registrar_log("Subdiretório 'python/' não encontrado.")
+        registrar_log(f"Subdiretório '{subdir}/' não encontrado.")
         return []
 
     projetos = []
@@ -191,6 +197,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    LOG_FILE = abrir_log_file()
     try:
         registrar_log("--- INÍCIO DA EXECUÇÃO DO PY-DOCTOR ---")
         if args.comando == "diagnosticar":
@@ -201,5 +208,6 @@ if __name__ == "__main__":
             menu()
     finally:
         registrar_log("--- FIM DA EXECUÇÃO ---")
-        log_file.close()
+        if LOG_FILE:
+            LOG_FILE.close()
 

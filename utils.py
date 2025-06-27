@@ -141,21 +141,18 @@ def _load_requirements_cached(req_path, _mtime):
         ]
 
 
-def mostrar_ultimo_log(caminho_projeto=None, projeto_path=None, tipo="diagnostico"):
+def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
     """Exibe o conteúdo do log mais recente do ``tipo`` para ``caminho_projeto``.
 
     Args:
-        caminho_projeto (str | None): Caminho do projeto.
-        projeto_path (str | None): Alias para ``caminho_projeto``.
+        caminho_projeto (str): Caminho do projeto.
         tipo (str): Prefixo do log (``diagnostico`` ou ``limpeza``).
 
     Returns:
         None
     """
 
-    path = caminho_projeto or projeto_path
-    if not path:
-        raise ValueError("caminho_projeto/projeto_path é obrigatório")
+    path = caminho_projeto
 
     garantir_logs()
     safe_name = path.replace(os.sep, "_")
