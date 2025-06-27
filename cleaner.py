@@ -2,11 +2,12 @@
 
 import os
 import time
+import shutil
 from glob import glob
 from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
-from py_doctor.utils import logar, esta_em_modo_teste
+from py_doctor.utils import logar, esta_em_modo_teste, LOG_DIR
 
 console = Console()
 
@@ -23,7 +24,24 @@ def limpar_pycache(projeto_path):
                 caminho = os.path.join(root, d)
                 removidos.append(("__pycache__", caminho))
                 if not modo_teste:
-                    os.system(f'rm -rf "{caminho}"')
+                    try:
+                        shutil.rmtree(caminho)
+                    except PermissionError as e:
+                        console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
+                        logar(
+                            f"Permissão negada ao remover {caminho}: {e}",
+                            projeto_path,
+                            tipo="limpeza",
+                            nivel="ERROR",
+                        )
+                    except Exception as e:
+                        console.print(f"[red]Erro ao remover {caminho}: {e}[/]")
+                        logar(
+                            f"Erro ao remover {caminho}: {e}",
+                            projeto_path,
+                            tipo="limpeza",
+                            nivel="ERROR",
+                        )
 
         for f in files:
             if f.endswith((".pyc", ".pyo", ".log")):
@@ -32,8 +50,22 @@ def limpar_pycache(projeto_path):
                 if not modo_teste:
                     try:
                         os.remove(caminho)
+                    except PermissionError as e:
+                        console.print(f"[red]Permissão negada ao remover {caminho}: {e}[/]")
+                        logar(
+                            f"Permissão negada ao remover {caminho}: {e}",
+                            projeto_path,
+                            tipo="limpeza",
+                            nivel="ERROR",
+                        )
                     except Exception as e:
                         console.print(f"[red]Erro ao remover {caminho}: {e}[/]")
+                        logar(
+                            f"Erro ao remover {caminho}: {e}",
+                            projeto_path,
+                            tipo="limpeza",
+                            nivel="ERROR",
+                        )
 
     if not removidos:
         console.print("[green]✅ Nada para limpar.")
@@ -75,3 +107,26 @@ def mostrar_ultimo_log(projeto_path, tipo="limpeza"):
     console.rule(f"📜 Último log de {tipo}")
     with open(ultimo, "r", encoding="utf-8") as f:
         console.print(Markdown(f.read()))
+
+
+def arquivar_logs_antigos(dias):
+    """Move arquivos .log antigos para a pasta ``logs_arquivados``."""
+
+    destino = os.path.join(LOG_DIR, "logs_arquivados")
+    os.makedirs(destino, exist_ok=True)
+    limite = time.time() - dias * 86400
+
+    for arquivo in glob(os.path.join(LOG_DIR, "*.log")):
+        if os.path.getmtime(arquivo) < limite:
+            try:
+                shutil.move(arquivo, os.path.join(destino, os.path.basename(arquivo)))
+                console.print(f"[blue]Arquivo arquivado:[/] {arquivo}")
+            except Exception as e:
+                console.print(f"[red]Erro ao arquivar {arquivo}: {e}")
+                logar(
+                    f"Erro ao arquivar {arquivo}: {e}",
+                    "logs",
+                    tipo="limpeza",
+                    nivel="ERROR",
+                )
+

@@ -14,12 +14,16 @@ def timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
-def logar(texto, projeto, tipo="geral"):
+def logar(texto, projeto, tipo="geral", nivel="INFO"):
+    """Grava mensagens de log em ``LOG_DIR`` com nivel de severidade."""
+
     garantir_logs()
     nome_log = f"{tipo}_log_{projeto.replace('/', '_')}_{timestamp()}.txt"
     caminho = os.path.join(LOG_DIR, nome_log)
+
     with open(caminho, "w", encoding="utf-8") as f:
-        f.write(texto)
+        f.write(f"[{nivel}] {texto}\n")
+
     print(f"📝 Log salvo em: {caminho}")
     return caminho
 
