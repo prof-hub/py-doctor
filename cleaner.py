@@ -8,9 +8,7 @@ import shutil
 from glob import glob
 from rich.console import Console
 from rich.table import Table
-from rich.markdown import Markdown
-from py_doctor.utils import logar, esta_em_modo_teste, LOG_DIR
-from py_doctor import filesystem as fs
+
 
 console = Console()
 
@@ -106,29 +104,6 @@ def limpar_pycache(projeto_path):
     texto_log += f"Duração da limpeza: {duracao:.2f}s\n"
     logar(texto_log, projeto_path, tipo="limpeza")
 
-
-def mostrar_ultimo_log(projeto_path, tipo="limpeza"):
-    """Exibe o último log gerado para o projeto.
-
-    Args:
-        projeto_path (str): Caminho do projeto.
-        tipo (str): Prefixo do log (``diagnostico`` ou ``limpeza``).
-
-    Returns:
-        None
-    """
-
-    safe_name = projeto_path.replace(os.sep, "_")
-    padrao = f"logs/{tipo}_log_{safe_name}_*.txt"
-    arquivos = sorted(glob(padrao), reverse=True)
-    if not arquivos:
-        console.print(f"[red]Nenhum log encontrado para:[/] {projeto_path}")
-        return
-
-    ultimo = arquivos[0]
-    console.rule(f"📜 Último log de {tipo}")
-    conteudo = fs.read_text(ultimo, default="")
-    console.print(Markdown(conteudo))
 
 
 def arquivar_logs_antigos(dias):
