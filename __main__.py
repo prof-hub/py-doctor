@@ -3,6 +3,7 @@
 import os
 import sys
 import datetime
+import argparse
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -126,9 +127,26 @@ def menu():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Py-Doctor CLI")
+    sub = parser.add_subparsers(dest="comando")
+
+    p_diag = sub.add_parser("diagnosticar", help="Rodar diagnóstico do projeto")
+    p_diag.add_argument("caminho", help="Caminho para o projeto")
+
+    p_limpar = sub.add_parser("limpar", help="Limpar resíduos do projeto")
+    p_limpar.add_argument("caminho", help="Caminho para o projeto")
+
+    args = parser.parse_args()
+
     try:
         registrar_log("--- INÍCIO DA EXECUÇÃO DO PY-DOCTOR ---")
-        menu()
+        if args.comando == "diagnosticar":
+            diagnosticar_projeto(args.caminho)
+        elif args.comando == "limpar":
+            limpar_pycache(args.caminho)
+        else:
+            menu()
     finally:
         registrar_log("--- FIM DA EXECUÇÃO ---")
         log_file.close()
+
