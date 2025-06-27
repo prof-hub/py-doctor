@@ -2,6 +2,9 @@ import os
 import datetime
 import configparser
 
+# Cache para a configuração carregada
+_CONFIG_CACHE = None
+
 LOG_DIR = "logs"
 CONFIG_FILE = ".pydoctor_config"
 
@@ -34,6 +37,11 @@ def esta_em_modo_teste():
 
 
 def carregar_configuracao():
+    """Lê o arquivo de configuração uma única vez e guarda em cache."""
+    global _CONFIG_CACHE
+    if _CONFIG_CACHE is not None:
+        return _CONFIG_CACHE
+
     config = {}
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -41,7 +49,16 @@ def carregar_configuracao():
                 if "=" in linha:
                     chave, valor = linha.strip().split("=", 1)
                     config[chave.strip()] = valor.strip()
+
+    _CONFIG_CACHE = config
     return config
+
+
+def reload_config():
+    """Força a releitura do arquivo de configuração."""
+    global _CONFIG_CACHE
+    _CONFIG_CACHE = None
+    return carregar_configuracao()
 
 
 def obter_workspace():
