@@ -1,10 +1,11 @@
 # py-doctor/checker.py
 
+"""Ferramentas de diagnóstico e verificação de dependências."""
+
 import os
 import subprocess
 import time
 import ast
-from glob import glob
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -13,12 +14,20 @@ try:
     from rich.markdown import Markdown
 except ImportError:
     Markdown = None
-from py_doctor.utils import logar, esta_em_modo_teste
+
 
 console = Console()
 
 
 def diagnosticar_projeto(caminho_projeto):
+    """Menu interativo de diagnóstico para um projeto.
+
+    Args:
+        caminho_projeto (str): Caminho do projeto a ser analisado.
+
+    Returns:
+        None
+    """
     while True:
         console.rule(f"[bold cyan]🔬 Diagnóstico: {caminho_projeto}")
         console.print("[1]: Verificar pacotes instalados com requirements.txt")
@@ -33,12 +42,7 @@ def diagnosticar_projeto(caminho_projeto):
         elif escolha == "2":
             req_path = os.path.join(caminho_projeto, "requirements.txt")
             if os.path.exists(req_path):
-                with open(req_path, "r", encoding="utf-8") as f:
-                    requeridos = [
-                        linha.strip()
-                        for linha in f
-                        if linha.strip() and not linha.startswith("#")
-                    ]
+
                 verificar_consistencia_requirements(caminho_projeto, requeridos)
             else:
                 console.print("[red]requirements.txt não encontrado.")
@@ -52,25 +56,7 @@ def diagnosticar_projeto(caminho_projeto):
             break
 
 
-def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
-    safe_name = caminho_projeto.replace(os.sep, "_")
-    padrao = f"logs/{tipo}_log_{safe_name}_*.txt"
-    arquivos = sorted(glob(padrao), reverse=True)
-    if not arquivos:
-        console.print(f"[red]Nenhum log encontrado para:[/] {caminho_projeto}")
-        return
 
-    ultimo = arquivos[0]
-    console.rule(f"📜 Último log de {tipo}")
-    with open(ultimo, "r", encoding="utf-8") as f:
-        conteudo = f.read()
-        if Markdown:
-            console.print(Markdown(conteudo))
-        else:
-            console.print(
-                "[yellow]⚠️ Módulo markdown_it não disponível — exibindo texto puro:"
-            )
-            console.print(conteudo)
 
 
 # (restante do código permanece igual)
@@ -80,6 +66,14 @@ def mostrar_ultimo_log(caminho_projeto, tipo="diagnostico"):
 # def diagnostico_basico(...)
 # def verificar_consistencia_requirements(...)
 def restaurar_backup_requirements(projeto_path):
+    """Restaura o ``requirements.txt`` a partir de um backup.
+
+    Args:
+        projeto_path (str): Caminho do projeto alvo.
+
+    Returns:
+        None
+    """
     req_path = os.path.join(projeto_path, "requirements.txt")
     backup = req_path + ".bak"
     if not os.path.exists(backup):
@@ -105,6 +99,14 @@ def restaurar_backup_requirements(projeto_path):
 
 
 def diagnostico_basico(caminho_projeto):
+    """Verifica se as dependências declaradas estão instaladas.
+
+    Args:
+        caminho_projeto (str): Caminho do projeto.
+
+    Returns:
+        None
+    """
     req_path = os.path.join(caminho_projeto, "requirements.txt")
     modo_teste = esta_em_modo_teste()
     log = f"Diagnóstico do projeto: {caminho_projeto}\n"
@@ -117,10 +119,7 @@ def diagnostico_basico(caminho_projeto):
         logar(log, caminho_projeto, tipo="diagnostico")
         return
 
-    with open(req_path, "r", encoding="utf-8") as f:
-        requeridos = [
-            linha.strip() for linha in f if linha.strip() and not linha.startswith("#")
-        ]
+
 
     console.print(
         f"📄 {len(requeridos)} dependência(s) declarada(s) em requirements.txt"
@@ -185,6 +184,15 @@ def diagnostico_basico(caminho_projeto):
 
 
 def verificar_consistencia_requirements(projeto_path, requeridos):
+    """Compara pacotes usados no código com o ``requirements.txt``.
+
+    Args:
+        projeto_path (str): Diretório do projeto.
+        requeridos (list[str]): Lista de dependências declaradas.
+
+    Returns:
+        None
+    """
     console.rule("[bold magenta]📊 Verificando consistência do requirements.txt")
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
@@ -193,15 +201,15 @@ def verificar_consistencia_requirements(projeto_path, requeridos):
             if f.endswith(".py"):
                 caminho = os.path.join(root, f)
                 try:
-                    with open(caminho, "r", encoding="utf-8") as src:
-                        tree = ast.parse(src.read(), filename=caminho)
-                        for node in ast.walk(tree):
-                            if isinstance(node, ast.Import):
-                                for alias in node.names:
-                                    usados.add(alias.name.split(".")[0])
-                            elif isinstance(node, ast.ImportFrom):
-                                if node.module:
-                                    usados.add(node.module.split(".")[0])
+                    codigo = fs.read_text(caminho, default="")
+                    tree = ast.parse(codigo, filename=caminho)
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Import):
+                            for alias in node.names:
+                                usados.add(alias.name.split(".")[0])
+                        elif isinstance(node, ast.ImportFrom):
+                            if node.module:
+                                usados.add(node.module.split(".")[0])
                 except Exception as e:
                     console.print(f"[yellow]Aviso: erro ao analisar {caminho}: {e}")
     usados = sorted(usados)
@@ -228,16 +236,20 @@ def verificar_consistencia_requirements(projeto_path, requeridos):
 
 
 def atualizar_requirements(projeto_path):
+    """Atualiza ``requirements.txt`` adicionando e removendo pacotes.
+
+    Args:
+        projeto_path (str): Caminho do projeto.
+
+    Returns:
+        None
+    """
     req_path = os.path.join(projeto_path, "requirements.txt")
     modo_teste = esta_em_modo_teste()
     if not os.path.exists(req_path):
         console.print("[red]❌ requirements.txt não encontrado.")
         return
 
-    with open(req_path, "r", encoding="utf-8") as f:
-        requeridos = [
-            linha.strip() for linha in f if linha.strip() and not linha.startswith("#")
-        ]
 
     requeridos_mod = set([r.split("==")[0].split("@")[0].lower() for r in requeridos])
     usados = set()
@@ -246,15 +258,15 @@ def atualizar_requirements(projeto_path):
             if f.endswith(".py"):
                 caminho = os.path.join(root, f)
                 try:
-                    with open(caminho, "r", encoding="utf-8") as src:
-                        tree = ast.parse(src.read(), filename=caminho)
-                        for node in ast.walk(tree):
-                            if isinstance(node, ast.Import):
-                                for alias in node.names:
-                                    usados.add(alias.name.split(".")[0])
-                            elif isinstance(node, ast.ImportFrom):
-                                if node.module:
-                                    usados.add(node.module.split(".")[0])
+                    codigo = fs.read_text(caminho, default="")
+                    tree = ast.parse(codigo, filename=caminho)
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Import):
+                            for alias in node.names:
+                                usados.add(alias.name.split(".")[0])
+                        elif isinstance(node, ast.ImportFrom):
+                            if node.module:
+                                usados.add(node.module.split(".")[0])
                 except Exception as e:
                     console.print(f"[yellow]Aviso: erro ao analisar {caminho}: {e}")
 
@@ -272,9 +284,7 @@ def atualizar_requirements(projeto_path):
     if not modo_teste:
         backup = req_path + ".bak"
         os.rename(req_path, backup)
-        with open(req_path, "w", encoding="utf-8") as f:
-            for r in novo_req:
-                f.write(r + "\n")
+        fs.write_text(req_path, "\n".join(novo_req) + "\n")
         console.print(
             f"[green]✔ requirements.txt atualizado com sucesso. Backup salvo como: {backup}"
         )
