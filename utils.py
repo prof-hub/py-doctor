@@ -1,5 +1,7 @@
 # Utilidades de configuracao e log para Py-Doctor
 
+# CONTEÚDO COMPLETO PARA O ARQUIVO py_doctor/utils.py
+
 import configparser
 import time
 from pathlib import Path
@@ -14,7 +16,7 @@ DEFAULT_CONFIG_CREATED = False
 
 console = Console()
 
-# --- Funcoes de Configuracao ---
+# --- Funções de Configuração ---
 
 def _criar_config_padrao(workspace_path: Path):
     """Cria um arquivo .pydoctor_config com o caminho do workspace fornecido."""
@@ -25,7 +27,6 @@ def _criar_config_padrao(workspace_path: Path):
     console.print(
         f"✅ [green]Arquivo de configuração '{CONFIG_FILE}' salvo para uso futuro.[/green]"
     )
-
 
 def obter_workspace() -> Path:
     """Obtém o caminho do workspace, com fallback interativo."""
@@ -54,7 +55,7 @@ def obter_workspace() -> Path:
         if not path_str:
             console.print("[red]❌ O caminho não pode ser vazio. Tente novamente.[/red]")
             continue
-
+        
         workspace = Path(path_str).expanduser().resolve()
         if workspace.is_dir():
             console.print(f"✅ [green]Workspace definido como:[/green] {workspace}")
@@ -64,7 +65,6 @@ def obter_workspace() -> Path:
         else:
             console.print(f"[red]❌ Erro: O caminho '{workspace}' não existe ou não é um diretório.[/red]")
 
-
 def esta_em_modo_teste() -> bool:
     """Verifica se o modo de teste está ativo no arquivo de configuração."""
     config = configparser.ConfigParser()
@@ -73,12 +73,11 @@ def esta_em_modo_teste() -> bool:
     config.read(CONFIG_FILE)
     return config.getboolean("DEFAULT", "modo_teste", fallback=False)
 
-# --- Funcoes de Log ---
+# --- Funções de Log ---
 
 def garantir_logs():
     """Cria o diretório de logs se ele não existir."""
     LOG_DIR.mkdir(exist_ok=True)
-
 
 def logar(conteudo: str, caminho_projeto: Path, tipo: str, nivel: str = "INFO"):
     """Salva uma string de log em um arquivo de log geral e em um log local do projeto."""
@@ -95,7 +94,6 @@ def logar(conteudo: str, caminho_projeto: Path, tipo: str, nivel: str = "INFO"):
     with log_local_path.open("w", encoding="utf-8") as f:
         f.write(conteudo)
 
-
 def mostrar_ultimo_log(caminho_projeto: Path, tipo: str = "diagnostico"):
     """Exibe o último log de um tipo específico salvo no diretório do projeto."""
     log_path = caminho_projeto / f".pydoctor_{tipo}.log"
@@ -106,7 +104,7 @@ def mostrar_ultimo_log(caminho_projeto: Path, tipo: str = "diagnostico"):
         conteudo = f.read()
     console.print(Panel(conteudo, title=f"Último log de {tipo}"))
 
-# --- Funcoes de Arquivo ---
+# --- Funções de Arquivo ---
 
 def load_requirements(caminho_projeto: Path) -> list[str]:
     """Lê o arquivo requirements.txt e retorna uma lista de dependências."""
@@ -115,8 +113,5 @@ def load_requirements(caminho_projeto: Path) -> list[str]:
         return []
     with req_path.open("r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
-
-
-
 
 
