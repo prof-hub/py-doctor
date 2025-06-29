@@ -19,7 +19,6 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.panel import Panel
 
-import py_doctor.filesystem as fs
 from py_doctor.utils import (
     LOG_DIR,
     garantir_logs,
@@ -85,13 +84,12 @@ def listar_projetos(workspace, subdir="python"):
         return []
 
     projetos = []
-    for nome in sorted(fs.list_dir(pasta_python)):
-        caminho = pasta_python / nome
-        if not caminho.is_dir():
+    for nome in sorted(pasta_python.iterdir()):
+        if not nome.is_dir():
             continue
-        arquivos = fs.list_dir(caminho)
+        arquivos = [p.name for p in nome.iterdir()]
         if any(f.endswith(".py") for f in arquivos) or "requirements.txt" in arquivos:
-            projetos.append(caminho)
+            projetos.append(nome)
 
     registrar_log(f"Projetos encontrados: {len(projetos)}")
     return projetos
