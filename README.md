@@ -1,3 +1,13 @@
+# 🔧 Instruções para a IA
+
+Este projeto contém um plano de ação completo a ser seguido pela IA assistente.
+**Leia todas as partes a partir da seção `## 5. Plano de Ação para Finalização` e execute cada passo em ordem**, usando os arquivos `manual_parte_01.md` até `manual_parte_05.md`, disponíveis na pasta de partes.
+Após executar, volte a este README, leia novamente a partir de `# Plano de Ação e Arquitetura do Py-Doctor para IA`,
+e gere um relatório comparando o que foi executado com o que está descrito.
+**Nesta etapa final, não modifique nada — apenas gere o relatório.**
+
+---
+
 # Plano de Ação e Arquitetura do Py-Doctor para IA
 
 ## 0. Instruções para a IA Assistente
