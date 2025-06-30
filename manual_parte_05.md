@@ -1,0 +1,10 @@
+| :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`__main__.py`**   | **Orquestrador Central (CLI):** Ponto de entrada da aplicação. Responsável por: 1. Analisar argumentos de linha de comando (`argparse`). 2. Iniciar o menu interativo (`rich`) se nenhum argumento for passado. 3. Chamar as funções dos módulos `checker` e `cleaner` com base na escolha do usuário. |
+| **`utils.py`**      | **Caixa de Ferramentas:** Módulo central de utilidades. Contém a lógica para: 1. Obter o caminho do workspace, com um fallback interativo (`obter_workspace`). 2. Criar e gerenciar o arquivo `.pydoctor_config`. 3. Centralizar a função de log (`logar`) e outras funções de apoio.                  |
+| **`checker.py`**    | **O Doutor:** Contém toda a lógica de diagnóstico. Suas funções incluem: 1. Comparar `requirements.txt` com pacotes `pip` instalados. 2. Analisar o código-fonte (`ast`) para encontrar imports e verificar a consistência com `requirements.txt`. 3. Atualizar `requirements.txt` automaticamente.    |
+| **`cleaner.py`**    | **O Faxineiro:** Responsável pela limpeza de arquivos. Suas funções incluem: 1. Remover pastas `__pycache__` e arquivos `.pyc`, `.pyo`. 2. Arquivar logs antigos (`arquivar_logs_antigos`).                                                                                                            |
+| **`filesystem.py`** | **(Legado)** Um wrapper para funções dos módulos `os` e `shutil`. **Este módulo é redundante**, pois a biblioteca `pathlib` (já em uso) e `shutil` podem substituir suas funções de forma mais limpa e moderna.                                                                                        |
+
+## 4. Fluxo de Execução
+
+1.  **Inicialização:** O usuário executa `python -m py_doctor` ou `python __main__.py`.
