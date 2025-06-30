@@ -35,7 +35,7 @@ sys.modules["rich"].panel = panel_module
 from pathlib import Path
 import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import utils
+from py_doctor import utils
 
 
 def test_log_filename_posix(tmp_path, monkeypatch):

@@ -9,7 +9,7 @@ import ast
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
-from py_doctor.utils import (
+from .utils import (
     logar,
     mostrar_ultimo_log,
     load_requirements,

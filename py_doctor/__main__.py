@@ -6,6 +6,7 @@ This module exposes the interactive menus used to diagnose and clean Python
 projects. It can also be executed directly as ``python -m py_doctor``.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -19,8 +20,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.panel import Panel
 
-import py_doctor.filesystem as fs
-from py_doctor.utils import (
+from .utils import (
     LOG_DIR,
     garantir_logs,
     obter_workspace,
@@ -28,8 +28,8 @@ from py_doctor.utils import (
     CONFIG_FILE,
 )
 
-from py_doctor.checker import diagnosticar_projeto
-from py_doctor.cleaner import limpar_pycache
+from .checker import diagnosticar_projeto
+from .cleaner import limpar_pycache
 
 
 console = Console()
@@ -85,11 +85,11 @@ def listar_projetos(workspace, subdir="python"):
         return []
 
     projetos = []
-    for nome in sorted(fs.list_dir(pasta_python)):
+    for nome in sorted(os.listdir(pasta_python)):
         caminho = pasta_python / nome
         if not caminho.is_dir():
             continue
-        arquivos = fs.list_dir(caminho)
+        arquivos = os.listdir(caminho)
         if any(f.endswith(".py") for f in arquivos) or "requirements.txt" in arquivos:
             projetos.append(caminho)
 
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         elif args.comando == "limpar":
             limpar_pycache(args.caminho)
         elif args.comando == "arquivar-logs":
-            from cleaner import arquivar_logs_antigos
+            from .cleaner import arquivar_logs_antigos
             arquivar_logs_antigos(args.dias)
         else:
             menu()

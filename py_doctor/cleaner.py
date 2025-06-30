@@ -10,7 +10,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from py_doctor.utils import LOG_DIR, esta_em_modo_teste, logar
+from .utils import LOG_DIR, esta_em_modo_teste, logar
 
 
 console = Console()
