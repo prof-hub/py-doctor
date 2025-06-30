@@ -127,7 +127,7 @@ def arquivar_logs_antigos(dias):
                 console.print(f"[red]Erro ao arquivar {arquivo}: {e}")
                 logar(
                     f"Erro ao arquivar {arquivo}: {e}",
-                    "logs",
+                    LOG_DIR,
                     tipo="limpeza",
                     nivel="ERROR",
                 )
